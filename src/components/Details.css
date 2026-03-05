@@ -1,0 +1,61 @@
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.detail-card {
+    background: white;
+    padding: 3rem 2rem;
+    text-align: center;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    transition: var(--transition-smooth);
+    border-top: 4px solid var(--color-primary);
+}
+
+.detail-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+}
+
+.detail-card .icon {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.detail-card h3 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+.detail-card p {
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.detail-card .highlight {
+    font-weight: 700;
+    color: var(--color-text);
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+}
+
+.map-btn {
+    display: inline-block;
+    padding: 0.8rem 2rem;
+    background-color: var(--color-primary);
+    color: white;
+    border-radius: 30px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.9rem;
+    transition: var(--transition-smooth);
+    margin-top: 1rem;
+}
+
+.map-btn:hover {
+    background-color: #B59530;
+    transform: scale(1.05);
+}
