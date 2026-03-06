@@ -13,13 +13,13 @@ import { getAuth } from "firebase/auth";
 //     appId: import.meta.env.VITE_FIREBASE_APP_ID || "YOUR_APP_ID"
 // };
 const firebaseConfig = {
-  apiKey: "AIzaSyDIRKW8v3ElHFHRHP9hJko_2c-d9BAwpKc",
-  authDomain: "wedding-90e4c.firebaseapp.com",
-  projectId: "wedding-90e4c",
-  storageBucket: "wedding-90e4c.firebasestorage.app",
-  messagingSenderId: "940174548126",
-  appId: "1:940174548126:web:7d3b473809017667606f8f",
-  measurementId: "G-7MTCYH6W77"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
