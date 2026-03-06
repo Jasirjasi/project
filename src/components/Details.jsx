@@ -1,7 +1,8 @@
 import './Details.css';
-import config from '../config';
+import { useConfig } from '../context/ConfigContext';
 
 const Details = () => {
+    const { config } = useConfig();
     return (
         <section className="details section-container" id="details">
             <h2 className="section-title">When & Where</h2>

@@ -38,7 +38,7 @@ const config = {
 
     // Photo Gallery Features
     allowGuestUploads: true,
-    apiUrl: import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? `http://${window.location.hostname}:3001/api` : 'http://localhost:3001/api'),
+    apiUrl: import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? (window.location.protocol === 'https:' ? '/api' : `http://${window.location.hostname}:3001/api`) : 'http://localhost:3001/api'),
 
     // Photo Gallery Images
     images: [

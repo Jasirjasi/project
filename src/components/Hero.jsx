@@ -1,7 +1,8 @@
 import './Hero.css';
-import config from '../config';
+import { useConfig } from '../context/ConfigContext';
 
 const Hero = () => {
+    const { config } = useConfig();
     return (
         <section
             className="hero"

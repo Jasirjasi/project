@@ -1,14 +1,19 @@
 import { useState } from 'react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase';
 import './RSVP.css';
-import config from '../config';
+import { useConfig } from '../context/ConfigContext';
 
 const RSVP = () => {
+    const { config } = useConfig();
     const [formData, setFormData] = useState({
         name: '',
         guests: '1',
         message: ''
     });
     const [isSubmitted, setIsSubmitted] = useState(false);
+
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleChange = (e) => {
         setFormData({
@@ -17,15 +22,25 @@ const RSVP = () => {
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Form Submitted:', formData);
-        // Here you would normally send the data to a backend
-        setIsSubmitted(true);
-        setTimeout(() => {
-            setIsSubmitted(false);
-            setFormData({ name: '', guests: '1', message: '' });
-        }, 3000);
+        setIsSubmitting(true);
+        try {
+            await addDoc(collection(db, 'reservations'), {
+                ...formData,
+                createdAt: serverTimestamp()
+            });
+            setIsSubmitted(true);
+            setTimeout(() => {
+                setIsSubmitted(false);
+                setFormData({ name: '', guests: '1', message: '' });
+            }, 3000);
+        } catch (error) {
+            console.error('Error saving RSVP:', error);
+            alert('Failed to send RSVP. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -82,7 +97,9 @@ const RSVP = () => {
                             ></textarea>
                         </div>
 
-                        <button type="submit" className="submit-btn">Send RSVP</button>
+                        <button type="submit" className="submit-btn" disabled={isSubmitting}>
+                            {isSubmitting ? 'Sending...' : 'Send RSVP'}
+                        </button>
                     </form>
                 )}
             </div>

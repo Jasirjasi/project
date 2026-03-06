@@ -1,31 +1,42 @@
 import { useState, useEffect } from 'react';
 import './Gallery.css';
-import config from '../config';
+import { useConfig } from '../context/ConfigContext';
+import { collection, getDocs, doc, deleteDoc, query, orderBy } from 'firebase/firestore';
+import { db } from '../firebase';
 import UploadModal from './UploadModal';
 import Swal from 'sweetalert2';
 
 const Gallery = () => {
+    const { config } = useConfig();
     const [modalOpen, setModalOpen] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [images, setImages] = useState(config.images); // Use images from config
+    const [images, setImages] = useState(() => config.images.map(src => ({ id: null, src }))); // Use images from config as objects
     const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
     // Fetch dynamically uploaded images on mount
     useEffect(() => {
         if (config.allowGuestUploads) {
-            fetch(`${config.apiUrl}/images`)
-                .then(res => res.json())
-                .then(data => {
-                    if (Array.isArray(data)) {
-                        setImages([...config.images, ...data]);
-                    }
-                })
-                .catch(console.error);
-        }
-    }, []);
+            const fetchImages = async () => {
+                try {
+                    const q = query(collection(db, 'images'), orderBy('createdAt', 'desc'));
+                    const querySnapshot = await getDocs(q);
+                    const loadedImages = querySnapshot.docs.map(docSnap => ({
+                        id: docSnap.id,
+                        src: docSnap.data().url
+                    }));
 
-    const handleUploadSuccess = (newImageUrl) => {
-        setImages(prev => [...prev, newImageUrl]);
+                    const configImgs = config.images.map(src => ({ id: null, src }));
+                    setImages([...configImgs, ...loadedImages]);
+                } catch (err) {
+                    console.error("Error fetching images from firestore", err);
+                }
+            };
+            fetchImages();
+        }
+    }, [config.allowGuestUploads, config.images]);
+
+    const handleUploadSuccess = (newImageObj) => {
+        setImages(prev => [...prev, newImageObj]);
     };
 
     const openModal = (index) => {
@@ -49,7 +60,7 @@ const Gallery = () => {
         setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
     };
 
-    const handleDelete = async (e, src, index) => {
+    const handleDelete = async (e, imageObj, index) => {
         e.stopPropagation(); // prevent modal from opening
 
         const result = await Swal.fire({
@@ -63,23 +74,16 @@ const Gallery = () => {
         });
 
         if (result.isConfirmed) {
-            // Check if it's an uploaded image dynamically served from the backend
-            if (src.includes('/images/uploads/')) {
-                const filename = src.split('/').pop();
+            // Check if it's an uploaded image dynamically served from Firestore
+            if (imageObj.id) {
                 try {
-                    const response = await fetch(`${config.apiUrl}/images/${filename}`, {
-                        method: 'DELETE',
-                    });
-                    if (response.ok) {
-                        setImages(prev => prev.filter((_, i) => i !== index));
-                        Swal.fire(
-                            'Deleted!',
-                            'Your photo has been deleted.',
-                            'success'
-                        );
-                    } else {
-                        Swal.fire('Error!', 'Failed to delete image from server.', 'error');
-                    }
+                    await deleteDoc(doc(db, 'images', imageObj.id));
+                    setImages(prev => prev.filter((_, i) => i !== index));
+                    Swal.fire(
+                        'Deleted!',
+                        'Your photo has been deleted.',
+                        'success'
+                    );
                 } catch (err) {
                     console.error('Delete error:', err);
                     Swal.fire('Error!', 'Something went wrong while deleting.', 'error');
@@ -109,19 +113,19 @@ const Gallery = () => {
             )}
 
             <div className="gallery-grid">
-                {images.map((src, index) => (
+                {images.map((imgObj, index) => (
                     <div
-                        key={index}
+                        key={imgObj.id || index}
                         className="gallery-item"
                         onClick={() => openModal(index)}
                     >
-                        <img src={src} alt="Couple photo" loading="lazy" />
+                        <img src={imgObj.src} alt="Couple photo" loading="lazy" />
                         <div className="gallery-overlay">
                             <span>View</span>
                         </div>
                         <button
                             className="delete-image-btn"
-                            onClick={(e) => handleDelete(e, src, index)}
+                            onClick={(e) => handleDelete(e, imgObj, index)}
                             title="Delete Photo"
                         >
                             <i className="fa-solid fa-trash-can"></i>
@@ -137,7 +141,7 @@ const Gallery = () => {
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <button className="nav-btn prev" onClick={prevImage}>&#10094;</button>
                         <img
-                            src={images[currentIndex]}
+                            src={images[currentIndex]?.src}
                             alt="Enlarged couple view"
                             className="modal-img fade-in"
                             key={currentIndex} /* Key change forces re-render for animation */

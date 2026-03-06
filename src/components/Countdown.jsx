@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import './Countdown.css';
-import config from '../config';
+import { useConfig } from '../context/ConfigContext';
 
 const Countdown = () => {
+    const { config } = useConfig();
     const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
 
     function calculateTimeLeft() {

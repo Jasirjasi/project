@@ -6,9 +6,14 @@ import Gallery from './components/Gallery';
 import Countdown from './components/Countdown';
 import RSVP from './components/RSVP';
 import MusicPlayer from './components/MusicPlayer';
-import config from './config';
-
+import { useConfig } from './context/ConfigContext';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard';
+import ProtectedRoute from './components/ProtectedRoute';
 function App() {
+  const { config } = useConfig();
+
   useEffect(() => {
     // Simple intersection observer for scroll animations
     const observer = new IntersectionObserver(
@@ -32,33 +37,45 @@ function App() {
     };
   }, []);
 
-  return (
+  const MainSite = () => (
     <div className="app-container">
       <MusicPlayer />
       <Hero />
-
       <main>
         <div className="scroll-animate">
           <Details />
         </div>
-
         <div className="scroll-animate">
           <Countdown />
         </div>
-
         <div className="scroll-animate">
           <Gallery />
         </div>
-
         <div className="scroll-animate">
           <RSVP />
         </div>
       </main>
-
       <footer>
         <p>&copy; {new Date().getFullYear()} {config.couple.namesFormatted}. We can't wait to celebrate with you!</p>
       </footer>
     </div>
+  );
+
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<MainSite />} />
+        <Route path="/admin" element={<AdminLogin />} />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </Router>
   );
 }
 

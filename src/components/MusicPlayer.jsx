@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react';
 import './MusicPlayer.css';
-import config from '../config';
+import { useConfig } from '../context/ConfigContext';
 
 const MusicPlayer = () => {
+    const { config } = useConfig();
     const [isPlaying, setIsPlaying] = useState(false);
     const audioRef = useRef(null);
 

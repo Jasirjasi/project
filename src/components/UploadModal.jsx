@@ -1,9 +1,12 @@
 import { useEffect } from 'react';
 import Swal from 'sweetalert2';
-import config from '../config';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase';
+import { useConfig } from '../context/ConfigContext';
 // import './UploadModal.css';
 
 const UploadModal = ({ isOpen, onClose, onUploadSuccess }) => {
+    const { config } = useConfig();
     useEffect(() => {
         if (!isOpen) return;
 
@@ -31,17 +34,22 @@ const UploadModal = ({ isOpen, onClose, onUploadSuccess }) => {
                         return false;
                     }
 
-                    const formData = new FormData();
-                    formData.append('image', selectedFile);
-
                     try {
-                        const response = await fetch(`${config.apiUrl}/upload`, {
-                            method: 'POST',
-                            body: formData,
+                        // Convert file to base64
+                        const base64String = await new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.readAsDataURL(selectedFile);
+                            reader.onload = () => resolve(reader.result);
+                            reader.onerror = error => reject(error);
                         });
 
-                        if (!response.ok) throw new Error('Upload failed');
-                        return await response.json();
+                        // Ensure we don't blow up Firestore document limit ideally, but user requested base64
+                        const docRef = await addDoc(collection(db, 'images'), {
+                            url: base64String,
+                            createdAt: serverTimestamp()
+                        });
+
+                        return { url: base64String, id: docRef.id };
                     } catch (err) {
                         console.error(err);
                         Swal.showValidationMessage('Failed to upload photo. Please try again.');
@@ -58,7 +66,7 @@ const UploadModal = ({ isOpen, onClose, onUploadSuccess }) => {
                     timer: 1500,
                     showConfirmButton: false
                 });
-                onUploadSuccess(file.url);
+                onUploadSuccess({ id: file.id, src: file.url });
             }
 
             // Close the React state for modal open regardless
