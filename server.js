@@ -42,8 +42,9 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded.' });
     }
-    // Return absolute path from the express server
-    const imageUrl = `http://localhost:${PORT}/images/uploads/${req.file.filename}`;
+    // Determine the base URL dynamically based on the incoming request
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const imageUrl = `${baseUrl}/images/uploads/${req.file.filename}`;
     res.json({ url: imageUrl, message: 'File uploaded successfully' });
 });
 
@@ -55,12 +56,35 @@ app.get('/api/images', (req, res) => {
             return res.status(500).json({ error: 'Failed to read images' });
         }
 
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
         // Filter out non-image files if necessary, and map to URLs
         const images = files
             .filter(file => /\.(jpg|jpeg|png|gif|webp)$/i.test(file))
-            .map(file => `http://localhost:${PORT}/images/uploads/${file}`);
+            .map(file => `${baseUrl}/images/uploads/${file}`);
 
         res.json(images);
+    });
+});
+
+// API to delete an uploaded image
+app.delete('/api/images/:filename', (req, res) => {
+    const filename = req.params.filename;
+
+    // basic security check to prevent directory traversal
+    if (!filename || filename.includes('..') || filename.includes('/')) {
+        return res.status(400).json({ error: 'Invalid file name.' });
+    }
+
+    const filePath = path.join(uploadDir, filename);
+
+    fs.unlink(filePath, (err) => {
+        if (err) {
+            console.error('Delete error', err);
+            // If file doesn't exist, we might still want to return success to client
+            // doing idempotent deletes, but let's just return 500 for simplicity or 404
+            return res.status(500).json({ error: 'Failed to delete file.' });
+        }
+        res.json({ message: 'File deleted successfully' });
     });
 });
 

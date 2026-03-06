@@ -3,9 +3,9 @@
 const config = {
     // Couple Info
     couple: {
-        name1: "adhi",
-        name2: "raj",
-        namesFormatted: "adhi & raj"
+        name1: "name1",
+        name2: "name2",
+        namesFormatted: "name1  & name2"
     },
 
     // Hero Section
@@ -38,6 +38,7 @@ const config = {
 
     // Photo Gallery Features
     allowGuestUploads: true,
+    apiUrl: import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? `http://${window.location.hostname}:3001/api` : 'http://localhost:3001/api'),
 
     // Photo Gallery Images
     images: [

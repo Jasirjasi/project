@@ -1,97 +1,74 @@
-import { useState } from 'react';
-import './UploadModal.css';
+import { useEffect } from 'react';
+import Swal from 'sweetalert2';
+import config from '../config';
+// import './UploadModal.css';
 
 const UploadModal = ({ isOpen, onClose, onUploadSuccess }) => {
-    const [file, setFile] = useState(null);
-    const [uploading, setUploading] = useState(false);
-    const [message, setMessage] = useState('');
-    const [error, setError] = useState(false);
+    useEffect(() => {
+        if (!isOpen) return;
 
-    if (!isOpen) return null;
+        const openUploadDialog = async () => {
+            const { value: file } = await Swal.fire({
+                title: 'Upload a Memory',
+                text: 'Share photos you took at our wedding!',
+                input: 'file',
+                inputAttributes: {
+                    'accept': 'image/png, image/jpeg, image/jpg, image/webp',
+                    'aria-label': 'Upload your family photo'
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Upload Photo',
+                showLoaderOnConfirm: true,
+                customClass: {
+                    input: 'swal2-custom-file-input',
+                    popup: 'swal2-custom-popup',
+                    confirmButton: 'swal2-custom-confirm-btn',
+                    cancelButton: 'swal2-custom-cancel-btn'
+                },
+                preConfirm: async (selectedFile) => {
+                    if (!selectedFile) {
+                        Swal.showValidationMessage('Please select a photo to upload.');
+                        return false;
+                    }
 
-    const handleFileChange = (e) => {
-        if (e.target.files && e.target.files[0]) {
-            setFile(e.target.files[0]);
-            setMessage('');
-            setError(false);
-        }
-    };
+                    const formData = new FormData();
+                    formData.append('image', selectedFile);
 
-    const handleUpload = async () => {
-        if (!file) {
-            setMessage('Please select a photo to upload.');
-            setError(true);
-            return;
-        }
+                    try {
+                        const response = await fetch(`${config.apiUrl}/upload`, {
+                            method: 'POST',
+                            body: formData,
+                        });
 
-        setUploading(true);
-        setMessage('');
-
-        const formData = new FormData();
-        formData.append('image', file);
-
-        try {
-            // Send request to our local local dev server running on 3001
-            const response = await fetch('http://localhost:3001/api/upload', {
-                method: 'POST',
-                body: formData,
+                        if (!response.ok) throw new Error('Upload failed');
+                        return await response.json();
+                    } catch (err) {
+                        console.error(err);
+                        Swal.showValidationMessage('Failed to upload photo. Please try again.');
+                    }
+                },
+                allowOutsideClick: () => !Swal.isLoading()
             });
 
-            if (!response.ok) throw new Error('Upload failed');
+            if (file && file.url) {
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Photo uploaded successfully!',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                onUploadSuccess(file.url);
+            }
 
-            const data = await response.json();
+            // Close the React state for modal open regardless
+            onClose();
+        };
 
-            setMessage('Photo uploaded successfully!');
-            setError(false);
-            setFile(null);
+        openUploadDialog();
+    }, [isOpen, onClose, onUploadSuccess]);
 
-            // Wait a moment then close and notify parent
-            setTimeout(() => {
-                onUploadSuccess(data.url);
-                onClose();
-            }, 1500);
-
-        } catch (err) {
-            console.error(err);
-            setMessage('Failed to upload photo. Please try again.');
-            setError(true);
-        } finally {
-            setUploading(false);
-        }
-    };
-
-    return (
-        <div className="upload-modal-overlay" onClick={onClose}>
-            <div className="upload-modal-content" onClick={e => e.stopPropagation()}>
-                <button className="upload-modal-close" onClick={onClose}>&times;</button>
-                <h3>Upload a Memory</h3>
-                <p>Share photos you took at our wedding!</p>
-
-                <div className="file-input-wrapper">
-                    <input
-                        type="file"
-                        accept="image/png, image/jpeg, image/jpg, image/webp"
-                        onChange={handleFileChange}
-                        disabled={uploading}
-                    />
-                </div>
-
-                <button
-                    className="upload-btn"
-                    onClick={handleUpload}
-                    disabled={!file || uploading}
-                >
-                    {uploading ? 'Uploading...' : 'Upload Photo'}
-                </button>
-
-                {message && (
-                    <div className={`upload-message ${error ? 'error' : 'success'}`}>
-                        {message}
-                    </div>
-                )}
-            </div>
-        </div>
-    );
+    return null; // The UI is fully handled by SweetAlert now
 };
 
 export default UploadModal;

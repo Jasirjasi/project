@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import './Gallery.css';
 import config from '../config';
 import UploadModal from './UploadModal';
+import Swal from 'sweetalert2';
 
 const Gallery = () => {
     const [modalOpen, setModalOpen] = useState(false);
@@ -12,7 +13,7 @@ const Gallery = () => {
     // Fetch dynamically uploaded images on mount
     useEffect(() => {
         if (config.allowGuestUploads) {
-            fetch('http://localhost:3001/api/images')
+            fetch(`${config.apiUrl}/images`)
                 .then(res => res.json())
                 .then(data => {
                     if (Array.isArray(data)) {
@@ -48,6 +49,53 @@ const Gallery = () => {
         setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
     };
 
+    const handleDelete = async (e, src, index) => {
+        e.stopPropagation(); // prevent modal from opening
+
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        });
+
+        if (result.isConfirmed) {
+            // Check if it's an uploaded image dynamically served from the backend
+            if (src.includes('/images/uploads/')) {
+                const filename = src.split('/').pop();
+                try {
+                    const response = await fetch(`${config.apiUrl}/images/${filename}`, {
+                        method: 'DELETE',
+                    });
+                    if (response.ok) {
+                        setImages(prev => prev.filter((_, i) => i !== index));
+                        Swal.fire(
+                            'Deleted!',
+                            'Your photo has been deleted.',
+                            'success'
+                        );
+                    } else {
+                        Swal.fire('Error!', 'Failed to delete image from server.', 'error');
+                    }
+                } catch (err) {
+                    console.error('Delete error:', err);
+                    Swal.fire('Error!', 'Something went wrong while deleting.', 'error');
+                }
+            } else {
+                // If it's a default config image, just remove from UI
+                setImages(prev => prev.filter((_, i) => i !== index));
+                Swal.fire(
+                    'Removed!',
+                    'Photo has been removed from view.',
+                    'success'
+                );
+            }
+        }
+    };
+
     return (
         <section className="gallery-section section-container" id="gallery">
             <h2 className="section-title">Our Memories</h2>
@@ -71,6 +119,13 @@ const Gallery = () => {
                         <div className="gallery-overlay">
                             <span>View</span>
                         </div>
+                        <button
+                            className="delete-image-btn"
+                            onClick={(e) => handleDelete(e, src, index)}
+                            title="Delete Photo"
+                        >
+                            <i className="fa-solid fa-trash-can"></i>
+                        </button>
                     </div>
                 ))}
             </div>
