@@ -27,6 +27,29 @@ const MainSite = ({ isPreview = false }) => {
 
     return (
         <div className="app-container" style={{ position: 'relative', overflowX: 'hidden' }}>
+            {config.theme && (
+                <style>
+                    {`
+                        ${(config.customFonts || []).map(font => `
+                            @font-face {
+                                font-family: ${font.family.includes("'") ? font.family : `'${font.family}'`};
+                                src: url('${font.url}');
+                            }
+                        `).join('\n')}
+
+                        :root {
+                            --color-primary: ${config.theme.primaryColor};
+                            --color-text: ${config.theme.textColor};
+                            --font-heading: '${config.theme.headingFont}', serif;
+                            --font-body: '${config.theme.bodyFont}', sans-serif;
+                            --font-accent: '${config.theme.accentFont}', cursive;
+                        }
+                        body {
+                            font-size: ${config.theme.baseFontSize};
+                        }
+                    `}
+                </style>
+            )}
             {!isPreview && <MusicPlayer />}
             <Hero isPreview={isPreview} />
             <main style={{ position: 'relative' }}>

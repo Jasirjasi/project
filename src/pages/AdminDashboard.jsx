@@ -7,6 +7,7 @@ import Gallery from '../components/Gallery';
 import Hero from '../components/Hero';
 import MainSite from '../components/MainSite';
 import Cropper from 'react-easy-crop';
+import JSZip from 'jszip';
 import { AVAILABLE_FONTS, BACKGROUND_POSITIONS } from '../constants';
 import './Admin.css';
 
@@ -36,11 +37,11 @@ const AdminDashboard = () => {
     const [rsvps, setRsvps] = useState([]);
     const navigate = useNavigate();
 
-    // Combine static fonts with custom fonts from config
-    const allFonts = [...AVAILABLE_FONTS, ...(config.customFonts || [])];
-
     // Local state for editing config
     const [editConfig, setEditConfig] = useState(config);
+
+    // Combine static fonts with custom fonts from edit state
+    const allFonts = [...AVAILABLE_FONTS, ...(editConfig?.customFonts || [])];
 
     // Cropping states
     const [imageToCrop, setImageToCrop] = useState(null);
@@ -178,7 +179,7 @@ const AdminDashboard = () => {
         return { hex: '#831843', opacity: 0.5 };
     };
 
-    const saveConfig = async () => {
+    const persistConfig = async (configToSave) => {
         try {
             const sanitize = (obj) => {
                 if (obj === undefined) return null;
@@ -193,7 +194,7 @@ const AdminDashboard = () => {
                 return result;
             };
 
-            const cleanConfig = sanitize(editConfig);
+            const cleanConfig = sanitize(configToSave);
 
             const { error: saveError } = await supabase
                 .from('settings')
@@ -202,7 +203,7 @@ const AdminDashboard = () => {
             if (saveError) throw saveError;
 
             setConfig(cleanConfig);
-            Swal.fire('Saved!', 'Website configuration has been updated.', 'success');
+            return true;
         } catch (err) {
             console.error("Supabase Save Error:", err);
             Swal.fire({
@@ -210,6 +211,14 @@ const AdminDashboard = () => {
                 title: 'Save Failed',
                 text: `Error: ${err.message}`,
             });
+            return false;
+        }
+    };
+
+    const handleSaveConfig = async () => {
+        const success = await persistConfig(editConfig);
+        if (success) {
+            Swal.fire('Saved!', 'Website configuration has been updated.', 'success');
         }
     };
 
@@ -248,6 +257,114 @@ const AdminDashboard = () => {
             setImageToCrop(null);
         } catch (e) {
             console.error(e);
+        }
+    };
+
+    const handleFontFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            Swal.fire({
+                title: 'Processing Font...',
+                text: 'Extracting and uploading...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            const newFonts = [];
+            if (file.name.toLowerCase().endsWith('.zip')) {
+                const zip = new JSZip();
+                const contents = await zip.loadAsync(file);
+                for (const [filename, zipEntry] of Object.entries(contents.files)) {
+                    if (!zipEntry.dir && (
+                        filename.toLowerCase().endsWith('.ttf') ||
+                        filename.toLowerCase().endsWith('.otf') ||
+                        filename.toLowerCase().endsWith('.woff') ||
+                        filename.toLowerCase().endsWith('.woff2')
+                    )) {
+                        const blob = await zipEntry.async('blob');
+                        const uploadedFont = await uploadAndRegisterFont(blob, filename);
+                        if (uploadedFont) newFonts.push(uploadedFont);
+                    }
+                }
+            } else if (
+                file.name.toLowerCase().endsWith('.ttf') ||
+                file.name.toLowerCase().endsWith('.otf') ||
+                file.name.toLowerCase().endsWith('.woff') ||
+                file.name.toLowerCase().endsWith('.woff2')
+            ) {
+                const uploadedFont = await uploadAndRegisterFont(file, file.name);
+                if (uploadedFont) newFonts.push(uploadedFont);
+            } else {
+                Swal.fire('Error', 'Please upload a valid font file (.ttf, .otf, .woff, .woff2) or a .zip archive.', 'error');
+                return;
+            }
+
+            if (newFonts.length > 0) {
+                const updatedFonts = [...(editConfig.customFonts || []), ...newFonts];
+                const newConfig = { ...editConfig, customFonts: updatedFonts };
+
+                setEditConfig(newConfig);
+                const success = await persistConfig(newConfig);
+
+                if (success) {
+                    Swal.fire('Success!', `Registered and saved ${newFonts.length} new font(s).`, 'success');
+                }
+            } else if (Swal.isVisible()) {
+                // If we didn't already show an error and no fonts were found
+                Swal.fire('Error', 'No valid font files found in the upload.', 'error');
+            }
+        } catch (err) {
+            console.error('Font upload error:', err);
+            if (err.message && (err.message.includes('Bucket not found') || err.message.includes('does not exist'))) {
+                Swal.fire({
+                    title: 'Storage Bucket Missing',
+                    html: `
+                        <div style="text-align: left; font-size: 0.9rem;">
+                            <p>To upload fonts, you need to create a bucket named <strong>"fonts"</strong> in your Supabase Dashboard:</p>
+                            <ol>
+                                <li>Go to <strong>Storage</strong> in Supabase.</li>
+                                <li>Click <strong>New Bucket</strong> and name it <strong>fonts</strong>.</li>
+                                <li>Set it to <strong>Public</strong>.</li>
+                                <li>Add an <strong>RLS Policy</strong> to allow "Insert" for all users (or authenticated admins).</li>
+                            </ol>
+                        </div>
+                    `,
+                    icon: 'warning'
+                });
+            } else {
+                Swal.fire('Error', 'Failed to process font file. Check console for details.', 'error');
+            }
+        }
+    };
+
+    const uploadAndRegisterFont = async (blob, filename) => {
+        try {
+            const cleanFilename = filename.split('/').pop(); // Handle zip paths
+            const storagePath = `custom-fonts/${Date.now()}_${cleanFilename}`;
+
+            const { data, error } = await supabase.storage
+                .from('fonts')
+                .upload(storagePath, blob);
+
+            if (error) {
+                // If bucket doesn't exist, this might fail. We should ideally create it or warn.
+                console.error('Upload error:', error);
+                throw error;
+            }
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('fonts')
+                .getPublicUrl(storagePath);
+
+            const fontBaseName = cleanFilename.split('.')[0].replace(/[-_]/g, ' ');
+            const family = `'${fontBaseName}'`;
+
+            return { name: fontBaseName, family, url: publicUrl };
+        } catch (err) {
+            console.error('Individual font upload failed:', err);
+            return null;
         }
     };
 
@@ -494,7 +611,7 @@ const AdminDashboard = () => {
                                             <input value={editConfig.details.venue.mapUrl} onChange={(e) => handleNestedConfigChange(e, 'details', 'venue', 'mapUrl')} />
                                         </div>
 
-                                        <button className="admin-btn" style={{ marginTop: '1rem' }} onClick={saveConfig}>Save Application Configuration</button>
+                                        <button className="admin-btn" style={{ marginTop: '1rem' }} onClick={handleSaveConfig}>Save Application Configuration</button>
                                     </div>
                                 </div>
                             </div>
@@ -562,24 +679,58 @@ const AdminDashboard = () => {
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                             <div>
-                                <h4 style={{ marginBottom: '1rem' }}>Register New Font</h4>
+                                <h4 style={{ marginBottom: '1rem' }}>Upload & Auto-Register</h4>
+                                <div className="admin-form" style={{ marginBottom: '2rem' }}>
+                                    <div className="form-group" style={{ background: '#fcfaf8', padding: '1.5rem', border: '2px dashed #ddd', borderRadius: '8px', textAlign: 'center' }}>
+                                        <p style={{ marginBottom: '1rem', fontSize: '0.9rem', color: '#666' }}>Upload single font files or a .zip archive containing multiple fonts.</p>
+                                        <input
+                                            type="file"
+                                            accept=".ttf,.otf,.woff,.woff2,.zip"
+                                            onChange={handleFontFileUpload}
+                                            style={{ display: 'none' }}
+                                            id="font-upload-input"
+                                        />
+                                        <button
+                                            className="admin-btn"
+                                            style={{ width: 'auto' }}
+                                            onClick={() => document.getElementById('font-upload-input').click()}
+                                        >
+                                            Select Font File/Zip
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <h4 style={{ marginBottom: '1rem' }}>Manual Registration</h4>
                                 <div className="admin-form">
                                     <div className="form-group">
                                         <label>Display Name (e.g. My Custom Font)</label>
                                         <input id="new-font-name" placeholder="My Custom Font" />
                                     </div>
                                     <div className="form-group">
-                                        <label>Font Family Name (must match @font-face)</label>
+                                        <label>Font Family Name (e.g. 'MyFont', sans-serif)</label>
                                         <input id="new-font-family" placeholder="'My Font', sans-serif" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Font Filename (e.g. MyFont.woff2)</label>
+                                        <input id="new-font-file" placeholder="MyFont.woff2" />
                                     </div>
                                     <button className="admin-btn" style={{ width: 'auto' }} onClick={() => {
                                         const name = document.getElementById('new-font-name').value;
                                         const family = document.getElementById('new-font-family').value;
-                                        if (name && family) {
-                                            const newFonts = [...(editConfig.customFonts || []), { name, family }];
-                                            setEditConfig(prev => ({ ...prev, customFonts: newFonts }));
-                                            document.getElementById('new-font-name').value = '';
-                                            document.getElementById('new-font-family').value = '';
+                                        const filename = document.getElementById('new-font-file').value;
+                                        if (name && family && filename) {
+                                            const updatedFonts = [...(editConfig.customFonts || []), { name, family, url: `/fonts/${filename}` }];
+                                            const newConfig = { ...editConfig, customFonts: updatedFonts };
+
+                                            setEditConfig(newConfig);
+                                            persistConfig(newConfig).then(success => {
+                                                if (success) {
+                                                    document.getElementById('new-font-name').value = '';
+                                                    document.getElementById('new-font-family').value = '';
+                                                    document.getElementById('new-font-file').value = '';
+                                                    Swal.fire('Success', 'Font registered and saved.', 'success');
+                                                }
+                                            });
                                         }
                                     }}>Add to Library</button>
                                 </div>
