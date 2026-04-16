@@ -1,12 +1,34 @@
 import { useState, useEffect } from 'react';
-import { signOut } from 'firebase/auth';
-import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase';
+import { supabase } from '../supabase';
 import { useNavigate } from 'react-router-dom';
-import { useConfig } from '../context/ConfigContext';
+import { useConfig, ConfigContext } from '../context/ConfigContext';
 import Swal from 'sweetalert2';
 import Gallery from '../components/Gallery';
+import Hero from '../components/Hero';
+import MainSite from '../components/MainSite';
+import Cropper from 'react-easy-crop';
+import { AVAILABLE_FONTS, BACKGROUND_POSITIONS } from '../constants';
 import './Admin.css';
+
+const InlineStyleControls = ({ styleObj, onChange, fonts }) => {
+    return (
+        <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.3rem', alignItems: 'center', flexWrap: 'wrap', padding: '0.4rem', background: '#f5f5f5', borderRadius: '4px', border: '1px solid #eaeaea' }}>
+            <input type="text" placeholder="Size (e.g. 2rem)" value={styleObj?.fontSize || ''} onChange={(e) => onChange('fontSize', e.target.value)} style={{ width: '130px', padding: '0.3rem', fontSize: '0.8rem', border: '1px solid #ccc', borderRadius: '4px' }} title="Font Size" />
+            <input type="color" value={styleObj?.color || '#000000'} onChange={(e) => onChange('color', e.target.value)} style={{ width: '28px', height: '28px', padding: 0, border: 'none', cursor: 'pointer', background: 'transparent' }} title="Text Color" />
+            <select
+                value={styleObj?.fontFamily || ''}
+                onChange={(e) => onChange('fontFamily', e.target.value)}
+                style={{ flexGrow: 1, minWidth: '130px', padding: '0.3rem', fontSize: '0.8rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                title="Font Family"
+            >
+                <option value="">Default Font</option>
+                {fonts.map(f => (
+                    <option key={f.name} value={f.family}>{f.name}</option>
+                ))}
+            </select>
+        </div>
+    );
+};
 
 const AdminDashboard = () => {
     const { config, setConfig } = useConfig();
@@ -14,18 +36,61 @@ const AdminDashboard = () => {
     const [rsvps, setRsvps] = useState([]);
     const navigate = useNavigate();
 
+    // Combine static fonts with custom fonts from config
+    const allFonts = [...AVAILABLE_FONTS, ...(config.customFonts || [])];
+
     // Local state for editing config
     const [editConfig, setEditConfig] = useState(config);
+
+    // Cropping states
+    const [imageToCrop, setImageToCrop] = useState(null);
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+    const [isCropping, setIsCropping] = useState(false);
+
+    // Splitter state
+    const [splitWidth, setSplitWidth] = useState(50);
+    const [isDragging, setIsDragging] = useState(false);
+
+    useEffect(() => {
+        const handleMouseMove = (e) => {
+            if (!isDragging) return;
+            const newWidth = (e.clientX / window.innerWidth) * 100;
+            if (newWidth > 20 && newWidth < 80) {
+                setSplitWidth(newWidth);
+            }
+        };
+
+        const handleMouseUp = () => {
+            setIsDragging(false);
+        };
+
+        if (isDragging) {
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+            document.body.style.cursor = 'col-resize';
+        } else {
+            document.body.style.cursor = 'default';
+        }
+
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isDragging]);
 
     useEffect(() => {
         if (activeTab === 'rsvps') {
             const fetchRsvps = async () => {
                 try {
-                    const querySnapshot = await getDocs(collection(db, 'reservations'));
-                    const rsvpList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    // Sort descending manually (or by using a query orderBy if index exists)
-                    rsvpList.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-                    setRsvps(rsvpList);
+                    const { data, error } = await supabase
+                        .from('reservations')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+
+                    if (error) throw error;
+                    setRsvps(data);
                 } catch (err) {
                     console.error('Failed to fetch RSVPs:', err);
                 }
@@ -35,7 +100,7 @@ const AdminDashboard = () => {
     }, [activeTab]);
 
     const handleLogout = async () => {
-        await signOut(auth);
+        await supabase.auth.signOut();
         navigate('/admin');
     };
 
@@ -56,16 +121,149 @@ const AdminDashboard = () => {
         }
     };
 
+    const handleNestedConfigChange = (e, section, subSection, key) => {
+        setEditConfig(prev => ({
+            ...prev,
+            [section]: {
+                ...prev[section],
+                [subSection]: {
+                    ...prev[section][subSection],
+                    [key]: e.target.type === 'checkbox' ? e.target.checked : e.target.value
+                }
+            }
+        }));
+    };
+
+    const handleStyleChange = (section, styleKey, prop, value) => {
+        setEditConfig(prev => ({
+            ...prev,
+            [section]: {
+                ...prev[section],
+                [styleKey]: {
+                    ...(prev[section][styleKey] || {}),
+                    [prop]: value
+                }
+            }
+        }));
+    };
+
+    const handleColorOpacityChange = (newHex, newOpacity) => {
+        let r = 131, g = 24, b = 67;
+        if (newHex.startsWith('#')) {
+            r = parseInt(newHex.slice(1, 3), 16) || 0;
+            g = parseInt(newHex.slice(3, 5), 16) || 0;
+            b = parseInt(newHex.slice(5, 7), 16) || 0;
+        }
+        const newColorStr = `rgba(${r}, ${g}, ${b}, ${newOpacity})`;
+        handleConfigChange({ target: { type: 'text', value: newColorStr } }, 'hero', 'overlayColor');
+    };
+
+    const extractColor = (colorStr) => {
+        if (!colorStr) return { hex: '#831843', opacity: 0.5 };
+        if (colorStr.startsWith('#')) {
+            return { hex: colorStr.substring(0, 7), opacity: colorStr.length === 9 ? parseInt(colorStr.substring(7, 9), 16) / 255 : 1 };
+        }
+        if (colorStr.startsWith('rgba') || colorStr.startsWith('rgb')) {
+            const parts = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+            if (parts) {
+                const r = parseInt(parts[1]).toString(16).padStart(2, '0');
+                const g = parseInt(parts[2]).toString(16).padStart(2, '0');
+                const b = parseInt(parts[3]).toString(16).padStart(2, '0');
+                return {
+                    hex: `#${r}${g}${b}`,
+                    opacity: parts[4] !== undefined ? parseFloat(parts[4]) : 1
+                };
+            }
+        }
+        return { hex: '#831843', opacity: 0.5 };
+    };
+
     const saveConfig = async () => {
         try {
-            await setDoc(doc(db, 'settings', 'main'), editConfig);
-            setConfig(editConfig);
+            const sanitize = (obj) => {
+                if (obj === undefined) return null;
+                if (obj === null || typeof obj !== 'object') return obj;
+                if (Array.isArray(obj)) return obj.map(sanitize);
+                const result = {};
+                for (const key in obj) {
+                    if (obj[key] !== undefined) {
+                        result[key] = sanitize(obj[key]);
+                    }
+                }
+                return result;
+            };
+
+            const cleanConfig = sanitize(editConfig);
+
+            const { error: saveError } = await supabase
+                .from('settings')
+                .upsert({ id: 'main', config: cleanConfig });
+
+            if (saveError) throw saveError;
+
+            setConfig(cleanConfig);
             Swal.fire('Saved!', 'Website configuration has been updated.', 'success');
         } catch (err) {
-            console.error(err);
-            Swal.fire('Error!', 'Failed to save configuration.', 'error');
+            console.error("Supabase Save Error:", err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Save Failed',
+                text: `Error: ${err.message}`,
+            });
         }
     };
+
+    const onCropComplete = (croppedArea, croppedAreaPixels) => {
+        setCroppedAreaPixels(croppedAreaPixels);
+    };
+
+    const showCroppedImage = async () => {
+        try {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const image = new Image();
+            image.src = imageToCrop;
+
+            await new Promise((resolve) => {
+                image.onload = resolve;
+            });
+
+            const { width, height, x, y } = croppedAreaPixels;
+            canvas.width = width;
+            canvas.height = height;
+
+            ctx.drawImage(
+                image,
+                x, y, width, height,
+                0, 0, width, height
+            );
+
+            const croppedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+
+            setEditConfig(prev => ({
+                ...prev,
+                hero: { ...prev.hero, backgroundImage: croppedBase64 }
+            }));
+            setIsCropping(false);
+            setImageToCrop(null);
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            setImageToCrop(event.target.result);
+            setIsCropping(true);
+        };
+    };
+
+    const currentColor = extractColor(editConfig.hero?.overlayColor);
 
     return (
         <div className="admin-dashboard-container">
@@ -79,58 +277,243 @@ const AdminDashboard = () => {
             <nav className="admin-nav">
                 <button className={`admin-nav-btn ${activeTab === 'config' ? 'active' : ''}`} onClick={() => setActiveTab('config')}>Configuration</button>
                 <button className={`admin-nav-btn ${activeTab === 'rsvps' ? 'active' : ''}`} onClick={() => setActiveTab('rsvps')}>RSVPs</button>
+                <button className={`admin-nav-btn ${activeTab === 'fonts' ? 'active' : ''}`} onClick={() => setActiveTab('fonts')}>Font Library</button>
                 <button className={`admin-nav-btn ${activeTab === 'gallery' ? 'active' : ''}`} onClick={() => setActiveTab('gallery')}>Gallery Storage</button>
             </nav>
 
             <main className="admin-content">
                 {activeTab === 'config' && editConfig && (
-                    <div className="admin-card">
-                        <h3 style={{ marginBottom: '1.5rem', borderBottom: '1px solid #ddd', paddingBottom: '0.5rem' }}>Site Configuration</h3>
-                        <div className="admin-form" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                            <div>
-                                <h4 style={{ marginBottom: '1rem', color: '#666' }}>Couple Information</h4>
-                                <div className="form-group">
-                                    <label>Name 1</label>
-                                    <input value={editConfig.couple.name1} onChange={(e) => handleConfigChange(e, 'couple', 'name1')} />
-                                </div>
-                                <div className="form-group">
-                                    <label>Name 2</label>
-                                    <input value={editConfig.couple.name2} onChange={(e) => handleConfigChange(e, 'couple', 'name2')} />
-                                </div>
-                                <div className="form-group">
-                                    <label>Formatted Names (Hero Banner)</label>
-                                    <input value={editConfig.couple.namesFormatted} onChange={(e) => handleConfigChange(e, 'couple', 'namesFormatted')} />
-                                </div>
+                    <div className="admin-split-layout">
+                        <div className="admin-config-panel" style={{ width: `${splitWidth}%` }}>
+                            <div className="admin-card">
+                                <h3 style={{ marginBottom: '1.5rem', borderBottom: '1px solid #ddd', paddingBottom: '0.5rem' }}>Site Configuration</h3>
+                                <div className="admin-form" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                                    <div>
+                                        <h4 style={{ marginBottom: '1rem', color: '#666' }}>Couple Information</h4>
+                                        <div className="form-group">
+                                            <label>Name 1</label>
+                                            <input value={editConfig.couple.name1} onChange={(e) => handleConfigChange(e, 'couple', 'name1')} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Name 2</label>
+                                            <input value={editConfig.couple.name2} onChange={(e) => handleConfigChange(e, 'couple', 'name2')} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Formatted Names (Hero Banner)</label>
+                                            <input value={editConfig.couple.namesFormatted} onChange={(e) => handleConfigChange(e, 'couple', 'namesFormatted')} />
+                                            <InlineStyleControls styleObj={editConfig.couple.namesFormattedStyle} onChange={(prop, val) => handleStyleChange('couple', 'namesFormattedStyle', prop, val)} fonts={allFonts} />
+                                        </div>
 
-                                <h4 style={{ margin: '2rem 0 1rem', color: '#666' }}>General Features</h4>
-                                <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                    <label style={{ margin: 0 }}>Allow Guest Photo Uploads</label>
-                                    <input type="checkbox" checked={editConfig.allowGuestUploads} onChange={(e) => handleConfigChange(e, 'root', 'allowGuestUploads')} style={{ width: 'auto', transform: 'scale(1.5)' }} />
+                                        <h4 style={{ margin: '2rem 0 1rem', color: '#666' }}>General Features</h4>
+                                        <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                            <label style={{ margin: 0 }}>Allow Guest Photo Uploads</label>
+                                            <input type="checkbox" checked={editConfig.allowGuestUploads} onChange={(e) => handleConfigChange(e, 'root', 'allowGuestUploads')} style={{ width: 'auto', transform: 'scale(1.5)' }} />
+                                        </div>
+
+                                        <h4 style={{ margin: '2rem 0 1rem', color: '#666' }}>Typography & Colors</h4>
+                                        <div className="form-group" style={{ display: 'flex', gap: '1rem' }}>
+                                            <div>
+                                                <label>Primary Color</label>
+                                                <input type="color" value={editConfig.theme?.primaryColor || '#DB2777'} onChange={(e) => handleConfigChange(e, 'theme', 'primaryColor')} style={{ width: '40px', height: '40px', padding: 0, border: '1px solid #ddd', borderRadius: '4px', cursor: 'pointer' }} />
+                                            </div>
+                                            <div>
+                                                <label>Text Color</label>
+                                                <input type="color" value={editConfig.theme?.textColor || '#831843'} onChange={(e) => handleConfigChange(e, 'theme', 'textColor')} style={{ width: '40px', height: '40px', padding: 0, border: '1px solid #ddd', borderRadius: '4px', cursor: 'pointer' }} />
+                                            </div>
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Heading Font Family</label>
+                                            <select value={editConfig.theme?.headingFont || ''} onChange={(e) => handleConfigChange(e, 'theme', 'headingFont')}>
+                                                {allFonts.map(f => (
+                                                    <option key={f.name} value={f.family}>{f.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Body Font Family</label>
+                                            <select value={editConfig.theme?.bodyFont || ''} onChange={(e) => handleConfigChange(e, 'theme', 'bodyFont')}>
+                                                {allFonts.map(f => (
+                                                    <option key={f.name} value={f.family}>{f.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Accent Font Family</label>
+                                            <select value={editConfig.theme?.accentFont || ''} onChange={(e) => handleConfigChange(e, 'theme', 'accentFont')}>
+                                                {allFonts.map(f => (
+                                                    <option key={f.name} value={f.family}>{f.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Base Font Size</label>
+                                            <input value={editConfig.theme?.baseFontSize || '16px'} onChange={(e) => handleConfigChange(e, 'theme', 'baseFontSize')} placeholder="e.g., 16px" />
+                                        </div>
+
+                                        <div className="form-group" style={{ display: 'flex', gap: '2rem', marginTop: '1rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <input type="checkbox" checked={editConfig.theme?.showParticles} onChange={(e) => handleConfigChange(e, 'theme', 'showParticles')} style={{ width: 'auto' }} />
+                                                <label style={{ margin: 0 }}>Show Particles</label>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <input type="checkbox" checked={editConfig.theme?.traditionalMode} onChange={(e) => handleConfigChange(e, 'theme', 'traditionalMode')} style={{ width: 'auto' }} />
+                                                <label style={{ margin: 0 }}>Traditional Mode</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <h4 style={{ marginBottom: '1rem', color: '#666' }}>Hero Section</h4>
+                                        <div className="form-group">
+                                            <label>Background Image</label>
+                                            <input
+                                                type="file"
+                                                accept="image/png, image/jpeg, image/jpg, image/webp"
+                                                onChange={handleImageUpload}
+                                            />
+                                            {editConfig.hero.backgroundImage && (
+                                                <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                                    <div style={{ width: '100%', position: 'relative' }}>
+                                                        <img
+                                                            src={editConfig.hero.backgroundImage}
+                                                            alt="preview"
+                                                            style={{
+                                                                width: '100%',
+                                                                height: '100px',
+                                                                objectFit: 'cover',
+                                                                borderRadius: '4px',
+                                                                border: '1px solid #ddd',
+                                                                backgroundPosition: editConfig.hero.backgroundPosition || 'center'
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div style={{ marginTop: '0.5rem', width: '100%' }}>
+                                                        <label style={{ fontSize: '0.8rem', color: '#666' }}>View Position</label>
+                                                        <select
+                                                            value={editConfig.hero.backgroundPosition || 'center'}
+                                                            onChange={(e) => handleConfigChange(e, 'hero', 'backgroundPosition')}
+                                                            style={{ marginTop: '0.2rem' }}
+                                                        >
+                                                            {BACKGROUND_POSITIONS.map(pos => (
+                                                                <option key={pos.value} value={pos.value}>{pos.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <button
+                                                        className="admin-btn"
+                                                        style={{ marginTop: '0.5rem', background: '#dc3545', width: 'auto', padding: '0.4rem 0.8rem', fontSize: '0.9rem' }}
+                                                        onClick={() => setEditConfig(prev => ({ ...prev, hero: { ...prev.hero, backgroundImage: '' } }))}
+                                                    >
+                                                        Remove Image
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Overlay Color (RGBA or HEX)</label>
+                                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                                <input
+                                                    type="color"
+                                                    value={currentColor.hex}
+                                                    onChange={(e) => handleColorOpacityChange(e.target.value, currentColor.opacity)}
+                                                    style={{ width: '40px', height: '40px', padding: '0', border: 'none', borderRadius: '4px', cursor: 'pointer', background: 'transparent' }}
+                                                    title="Pick a solid color"
+                                                />
+                                                <input
+                                                    type="range"
+                                                    min="0" max="1" step="0.01"
+                                                    value={currentColor.opacity}
+                                                    onChange={(e) => handleColorOpacityChange(currentColor.hex, parseFloat(e.target.value))}
+                                                    style={{ width: '80px', cursor: 'pointer' }}
+                                                    title="Adjust Transparency"
+                                                />
+                                                <input
+                                                    value={editConfig.hero.overlayColor || ''}
+                                                    onChange={(e) => handleConfigChange(e, 'hero', 'overlayColor')}
+                                                    placeholder="e.g., rgba(131, 24, 67, 0.5) or #831843"
+                                                    style={{ flexGrow: 1 }}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Subtitle</label>
+                                            <input value={editConfig.hero.subtitle} onChange={(e) => handleConfigChange(e, 'hero', 'subtitle')} />
+                                            <InlineStyleControls styleObj={editConfig.hero.subtitleStyle} onChange={(prop, val) => handleStyleChange('hero', 'subtitleStyle', prop, val)} fonts={allFonts} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Date Text</label>
+                                            <input value={editConfig.hero.dateText} onChange={(e) => handleConfigChange(e, 'hero', 'dateText')} />
+                                            <InlineStyleControls styleObj={editConfig.hero.dateStyle} onChange={(prop, val) => handleStyleChange('hero', 'dateStyle', prop, val)} fonts={allFonts} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Time Text</label>
+                                            <input value={editConfig.hero.timeText || ''} onChange={(e) => handleConfigChange(e, 'hero', 'timeText')} placeholder="e.g., 4:00 PM" />
+                                            <InlineStyleControls styleObj={editConfig.hero.timeStyle} onChange={(prop, val) => handleStyleChange('hero', 'timeStyle', prop, val)} fonts={allFonts} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Location Text</label>
+                                            <input value={editConfig.hero.locationText} onChange={(e) => handleConfigChange(e, 'hero', 'locationText')} />
+                                            <InlineStyleControls styleObj={editConfig.hero.locationStyle} onChange={(prop, val) => handleStyleChange('hero', 'locationStyle', prop, val)} fonts={allFonts} />
+                                        </div>
+
+                                        <h4 style={{ margin: '2rem 0 1rem', color: '#666' }}>RSVP Settings</h4>
+                                        <div className="form-group">
+                                            <label>Deadline Text</label>
+                                            <input value={editConfig.rsvp.deadline} onChange={(e) => handleConfigChange(e, 'rsvp', 'deadline')} />
+                                        </div>
+
+                                        <h4 style={{ margin: '2rem 0 1rem', color: '#666' }}>When & Where (Ceremony)</h4>
+                                        <div className="form-group">
+                                            <label>Day of Week</label>
+                                            <input value={editConfig.details.ceremony.dayOfWeek} onChange={(e) => handleNestedConfigChange(e, 'details', 'ceremony', 'dayOfWeek')} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Full Date</label>
+                                            <input value={editConfig.details.ceremony.dateFull} onChange={(e) => handleNestedConfigChange(e, 'details', 'ceremony', 'dateFull')} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Time Start</label>
+                                            <input value={editConfig.details.ceremony.timeStart} onChange={(e) => handleNestedConfigChange(e, 'details', 'ceremony', 'timeStart')} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Time Notes</label>
+                                            <input value={editConfig.details.ceremony.timeNotes} onChange={(e) => handleNestedConfigChange(e, 'details', 'ceremony', 'timeNotes')} />
+                                        </div>
+
+                                        <h4 style={{ margin: '2rem 0 1rem', color: '#666' }}>When & Where (Venue)</h4>
+                                        <div className="form-group">
+                                            <label>Venue Name</label>
+                                            <input value={editConfig.details.venue.name} onChange={(e) => handleNestedConfigChange(e, 'details', 'venue', 'name')} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Venue Address</label>
+                                            <input value={editConfig.details.venue.address} onChange={(e) => handleNestedConfigChange(e, 'details', 'venue', 'address')} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Map URL</label>
+                                            <input value={editConfig.details.venue.mapUrl} onChange={(e) => handleNestedConfigChange(e, 'details', 'venue', 'mapUrl')} />
+                                        </div>
+
+                                        <button className="admin-btn" style={{ marginTop: '1rem' }} onClick={saveConfig}>Save Application Configuration</button>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div>
-                                <h4 style={{ marginBottom: '1rem', color: '#666' }}>Hero Section</h4>
-                                <div className="form-group">
-                                    <label>Subtitle</label>
-                                    <input value={editConfig.hero.subtitle} onChange={(e) => handleConfigChange(e, 'hero', 'subtitle')} />
-                                </div>
-                                <div className="form-group">
-                                    <label>Date Text</label>
-                                    <input value={editConfig.hero.dateText} onChange={(e) => handleConfigChange(e, 'hero', 'dateText')} />
-                                </div>
-                                <div className="form-group">
-                                    <label>Location Text</label>
-                                    <input value={editConfig.hero.locationText} onChange={(e) => handleConfigChange(e, 'hero', 'locationText')} />
-                                </div>
+                        <div className="admin-splitter" onMouseDown={() => setIsDragging(true)}>
+                            <div className="splitter-handle"></div>
+                        </div>
 
-                                <h4 style={{ margin: '2rem 0 1rem', color: '#666' }}>RSVP Settings</h4>
-                                <div className="form-group">
-                                    <label>Deadline Text</label>
-                                    <input value={editConfig.rsvp.deadline} onChange={(e) => handleConfigChange(e, 'rsvp', 'deadline')} />
+                        <div className="admin-preview-panel" style={{ width: `${100 - splitWidth}%` }}>
+                            <div className="admin-card preview-card">
+                                <h3>Full Site Live Preview</h3>
+                                <div className="preview-container-wrapper">
+                                    <div className="preview-scaling-container">
+                                        <ConfigContext.Provider value={{ config: editConfig, setConfig }}>
+                                            <MainSite isPreview={true} />
+                                        </ConfigContext.Provider>
+                                    </div>
                                 </div>
-
-                                <button className="admin-btn" style={{ marginTop: '1rem' }} onClick={saveConfig}>Save Application Configuration</button>
                             </div>
                         </div>
                     </div>
@@ -172,6 +555,62 @@ const AdminDashboard = () => {
                     </div>
                 )}
 
+                {activeTab === 'fonts' && (
+                    <div className="admin-card">
+                        <h3>Font Library</h3>
+                        <p style={{ marginBottom: '2rem', color: '#666' }}>Add fonts stored in <code style={{ background: '#eee', padding: '0.2rem 0.4rem', borderRadius: '4px' }}>public/fonts/</code> to have them appear in dropdowns.</p>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                            <div>
+                                <h4 style={{ marginBottom: '1rem' }}>Register New Font</h4>
+                                <div className="admin-form">
+                                    <div className="form-group">
+                                        <label>Display Name (e.g. My Custom Font)</label>
+                                        <input id="new-font-name" placeholder="My Custom Font" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Font Family Name (must match @font-face)</label>
+                                        <input id="new-font-family" placeholder="'My Font', sans-serif" />
+                                    </div>
+                                    <button className="admin-btn" style={{ width: 'auto' }} onClick={() => {
+                                        const name = document.getElementById('new-font-name').value;
+                                        const family = document.getElementById('new-font-family').value;
+                                        if (name && family) {
+                                            const newFonts = [...(editConfig.customFonts || []), { name, family }];
+                                            setEditConfig(prev => ({ ...prev, customFonts: newFonts }));
+                                            document.getElementById('new-font-name').value = '';
+                                            document.getElementById('new-font-family').value = '';
+                                        }
+                                    }}>Add to Library</button>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 style={{ marginBottom: '1rem' }}>Available Fonts</h4>
+                                <ul style={{ listStyle: 'none', padding: 0 }}>
+                                    {[...AVAILABLE_FONTS, ...(editConfig.customFonts || [])].map((f, i) => (
+                                        <li key={i} style={{ padding: '0.8rem', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <div>
+                                                <strong style={{ fontFamily: f.family }}>{f.name}</strong>
+                                                <div style={{ fontSize: '0.7rem', color: '#888' }}>{f.family}</div>
+                                            </div>
+                                            {i >= AVAILABLE_FONTS.length && (
+                                                <button
+                                                    style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', fontSize: '1.2rem' }}
+                                                    onClick={() => {
+                                                        const userFonts = editConfig.customFonts || [];
+                                                        const newFonts = userFonts.filter((_, idx) => idx !== (i - AVAILABLE_FONTS.length));
+                                                        setEditConfig(prev => ({ ...prev, customFonts: newFonts }));
+                                                    }}
+                                                >&times;</button>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {activeTab === 'gallery' && (
                     <div className="admin-card" style={{ background: '#fcfaf8' }}>
                         <h3 style={{ marginBottom: '0.5rem' }}>Gallery Manager</h3>
@@ -182,6 +621,38 @@ const AdminDashboard = () => {
                     </div>
                 )}
             </main>
+
+            {isCropping && (
+                <div className="cropper-modal">
+                    <div className="cropper-container">
+                        <Cropper
+                            image={imageToCrop}
+                            crop={crop}
+                            zoom={zoom}
+                            aspect={16 / 9}
+                            onCropChange={setCrop}
+                            onCropComplete={onCropComplete}
+                            onZoomChange={setZoom}
+                        />
+                    </div>
+                    <div className="cropper-buttons">
+                        <input
+                            type="range"
+                            value={zoom}
+                            min={1}
+                            max={3}
+                            step={0.1}
+                            aria-labelledby="Zoom"
+                            onChange={(e) => setZoom(e.target.value)}
+                            className="zoom-range"
+                        />
+                        <div className="cropper-buttons">
+                            <button onClick={() => setIsCropping(false)} className="admin-btn cancel">Cancel</button>
+                            <button onClick={showCroppedImage} className="admin-btn save">Crop & Save</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

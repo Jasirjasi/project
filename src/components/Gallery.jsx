@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import './Gallery.css';
 import { useConfig } from '../context/ConfigContext';
-import { collection, getDocs, doc, deleteDoc, query, orderBy } from 'firebase/firestore';
-import { db } from '../firebase';
+import { supabase } from '../supabase';
 import UploadModal from './UploadModal';
 import Swal from 'sweetalert2';
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const Gallery = () => {
     const { config } = useConfig();
@@ -18,11 +19,15 @@ const Gallery = () => {
         if (config.allowGuestUploads) {
             const fetchImages = async () => {
                 try {
-                    const q = query(collection(db, 'images'), orderBy('createdAt', 'desc'));
-                    const querySnapshot = await getDocs(q);
-                    const loadedImages = querySnapshot.docs.map(docSnap => ({
-                        id: docSnap.id,
-                        src: docSnap.data().url
+                    const { data, error } = await supabase
+                        .from('images')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+
+                    if (error) throw error;
+                    const loadedImages = data.map(img => ({
+                        id: img.id,
+                        src: img.url
                     }));
 
                     const configImgs = config.images.map(src => ({ id: null, src }));
@@ -77,7 +82,11 @@ const Gallery = () => {
             // Check if it's an uploaded image dynamically served from Firestore
             if (imageObj.id) {
                 try {
-                    await deleteDoc(doc(db, 'images', imageObj.id));
+                    const { error: deleteError } = await supabase
+                        .from('images')
+                        .delete()
+                        .eq('id', imageObj.id);
+                    if (deleteError) throw deleteError;
                     setImages(prev => prev.filter((_, i) => i !== index));
                     Swal.fire(
                         'Deleted!',
@@ -106,8 +115,8 @@ const Gallery = () => {
 
             {config.allowGuestUploads && (
                 <div className="gallery-actions">
-                    <button className="upload-trigger-btn" onClick={() => setUploadModalOpen(true)}>
-                        <i className="fa-solid fa-camera"></i> Upload Photo
+                    <button className="upload-trigger-btn" onClick={() => setUploadModalOpen(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                        <PhotoCameraIcon fontSize="small" /> Upload Photo
                     </button>
                 </div>
             )}
@@ -128,7 +137,7 @@ const Gallery = () => {
                             onClick={(e) => handleDelete(e, imgObj, index)}
                             title="Delete Photo"
                         >
-                            <i className="fa-solid fa-trash-can"></i>
+                            <DeleteIcon fontSize="small" />
                         </button>
                     </div>
                 ))}

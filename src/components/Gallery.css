@@ -8,10 +8,10 @@
 .gallery-item {
     position: relative;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     cursor: pointer;
     aspect-ratio: 1 / 1;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-soft);
 }
 
 .gallery-item img {
@@ -27,8 +27,8 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(212, 175, 55, 0.4);
-    /* Gold overlay */
+    background: var(--color-overlay);
+    /* Themed overlay */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -65,19 +65,20 @@
 
 .upload-trigger-btn {
     background: transparent;
-    color: var(--color-primary, #cba87c);
-    border: 2px solid var(--color-primary, #cba87c);
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
     padding: 10px 24px;
-    border-radius: 30px;
+    border-radius: var(--radius-full);
     font-size: 16px;
     cursor: pointer;
     font-family: var(--font-body);
-    transition: all 0.3s;
+    transition: var(--transition-smooth);
 }
 
 .upload-trigger-btn:hover {
-    background: var(--color-primary, #cba87c);
+    background: var(--color-primary);
     color: white;
+    box-shadow: var(--shadow-soft);
 }
 
 /* Modal Styles */
@@ -181,12 +182,12 @@
     position: absolute;
     top: 10px;
     right: 10px;
-    background: rgba(255, 0, 0, 0.7);
-    color: white;
+    background: rgba(255, 255, 255, 0.95);
+    color: #e53935;
     border: none;
     border-radius: 50%;
-    width: 35px;
-    height: 35px;
+    width: 36px;
+    height: 36px;
     font-size: 16px;
     cursor: pointer;
     display: flex;
@@ -195,6 +196,7 @@
     opacity: 0;
     transition: all 0.3s ease;
     z-index: 2;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .gallery-item:hover .delete-image-btn {
@@ -202,7 +204,8 @@
 }
 
 .delete-image-btn:hover {
-    background: rgba(255, 0, 0, 1);
+    background: #e53935;
+    color: white;
     transform: scale(1.1);
 }
 

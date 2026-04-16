@@ -4,13 +4,12 @@
 }
 
 .rsvp-container {
-    background: white;
+    background: var(--color-surface);
     padding: 4rem;
-    border-radius: 12px;
-    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.05);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
     max-width: 600px;
     width: 100%;
-    border-top: 6px solid var(--color-primary);
     text-align: center;
 }
 
@@ -43,12 +42,12 @@
 .form-group select,
 .form-group textarea {
     padding: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-md);
     background-color: #fafafa;
     font-family: var(--font-body);
     font-size: 1rem;
-    transition: border-color 0.3s, box-shadow 0.3s;
+    transition: var(--transition-smooth);
 }
 
 .form-group input:focus,
@@ -56,7 +55,7 @@
 .form-group textarea:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+    box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.15);
 }
 
 .submit-btn {
@@ -66,15 +65,18 @@
     font-size: 1.1rem;
     text-transform: uppercase;
     letter-spacing: 2px;
-    border-radius: 4px;
-    transition: all 0.3s ease;
+    border-radius: var(--radius-md);
+    transition: var(--transition-smooth);
     margin-top: 1rem;
+    border: none;
+    cursor: pointer;
 }
 
 .submit-btn:hover {
-    background-color: #b59530;
+    background-color: #BE185D;
+    /* Darker deep pink */
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+    box-shadow: var(--shadow-md);
 }
 
 .success-message {

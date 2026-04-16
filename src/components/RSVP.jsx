@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebase';
+import { supabase } from '../supabase';
 import './RSVP.css';
 import { useConfig } from '../context/ConfigContext';
+import BlurText from './animations/BlurText';
 
 const RSVP = () => {
     const { config } = useConfig();
@@ -26,10 +26,11 @@ const RSVP = () => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            await addDoc(collection(db, 'reservations'), {
-                ...formData,
-                createdAt: serverTimestamp()
-            });
+            const { error: insertError } = await supabase
+                .from('reservations')
+                .insert([formData]);
+
+            if (insertError) throw insertError;
             setIsSubmitted(true);
             setTimeout(() => {
                 setIsSubmitted(false);
@@ -47,7 +48,15 @@ const RSVP = () => {
         <section className="rsvp-section section-container" id="rsvp">
             <div className="rsvp-container">
                 <h2 className="section-title">Are you attending?</h2>
-                <p className="rsvp-subtitle">We kindly ask you to RSVP by {config.rsvp.deadline}</p>
+                <p className="rsvp-subtitle">
+                    <BlurText
+                        text={`We kindly ask you to RSVP by ${config.rsvp.deadline}`}
+                        delay={30}
+                        animateBy="words"
+                        direction="bottom"
+                        threshold={0.5}
+                    />
+                </p>
 
                 {isSubmitted ? (
                     <div className="success-message">

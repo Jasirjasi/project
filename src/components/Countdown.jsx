@@ -7,10 +7,11 @@ const Countdown = () => {
     const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
 
     function calculateTimeLeft() {
-        const difference = +new Date(config.countdownTarget) - +new Date();
+        const targetDateString = `${config.details.ceremony.dateFull || ''} ${config.details.ceremony.timeStart || ''}`.trim();
+        const difference = +new Date(targetDateString) - +new Date();
         let timeLeft = {};
 
-        if (difference > 0) {
+        if (difference > 0 && !isNaN(difference)) {
             timeLeft = {
                 days: Math.floor(difference / (1000 * 60 * 60 * 24)),
                 hours: Math.floor((difference / (1000 * 60 * 60)) % 24),

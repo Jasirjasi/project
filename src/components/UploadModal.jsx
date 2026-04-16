@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import Swal from 'sweetalert2';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebase';
+import { supabase } from '../supabase';
 import { useConfig } from '../context/ConfigContext';
 // import './UploadModal.css';
 
@@ -43,13 +42,15 @@ const UploadModal = ({ isOpen, onClose, onUploadSuccess }) => {
                             reader.onerror = error => reject(error);
                         });
 
-                        // Ensure we don't blow up Firestore document limit ideally, but user requested base64
-                        const docRef = await addDoc(collection(db, 'images'), {
-                            url: base64String,
-                            createdAt: serverTimestamp()
-                        });
+                        // Store base64 in Supabase 'images' table
+                        const { data, error: insertError } = await supabase
+                            .from('images')
+                            .insert([{ url: base64String }])
+                            .select();
 
-                        return { url: base64String, id: docRef.id };
+                        if (insertError) throw insertError;
+
+                        return { url: base64String, id: data[0].id };
                     } catch (err) {
                         console.error(err);
                         Swal.showValidationMessage('Failed to upload photo. Please try again.');

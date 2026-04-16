@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase';
+import { supabase } from '../supabase';
 import { useNavigate } from 'react-router-dom';
 import './Admin.css';
 
@@ -16,7 +15,11 @@ const AdminLogin = () => {
         setLoading(true);
         setError('');
         try {
-            await signInWithEmailAndPassword(auth, email, password);
+            const { error: loginError } = await supabase.auth.signInWithPassword({
+                email,
+                password
+            });
+            if (loginError) throw loginError;
             navigate('/admin/dashboard');
         } catch (err) {
             setError('Failed to log in. Please check your credentials.');

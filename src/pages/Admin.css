@@ -45,7 +45,8 @@
 }
 
 .admin-form input,
-.admin-form textarea {
+.admin-form textarea,
+.admin-form select {
     width: 100%;
     padding: 0.8rem;
     border: 1px solid #ddd;
@@ -79,23 +80,27 @@
 .admin-dashboard-container {
     min-height: 100vh;
     background-color: #f4f6f8;
+    display: flex;
+    flex-direction: column;
 }
 
 .admin-header {
     background: white;
-    padding: 1rem 2rem;
+    padding: 0.8rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    z-index: 100;
 }
 
 .admin-nav {
     display: flex;
     gap: 1rem;
-    padding: 1rem 2rem;
+    padding: 0.5rem 2rem;
     background: #fff;
     border-bottom: 1px solid #eaeaea;
+    z-index: 100;
 }
 
 .admin-nav-btn {
@@ -114,14 +119,152 @@
 }
 
 .admin-content {
-    padding: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
+    flex: 1;
+    overflow: hidden;
 }
 
 .admin-card {
     background: white;
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 8px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+/* Split Layout */
+.admin-split-layout {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+    height: calc(100vh - 120px);
+    overflow: hidden;
+    background: #eaedf2;
+}
+
+.admin-config-panel {
+    min-width: 300px;
+    padding: 15px;
+    overflow-y: auto;
+    background: #f4f6f8;
+}
+
+.admin-preview-panel {
+    min-width: 300px;
+    padding: 15px;
+    overflow: hidden;
+    flex: 1;
+}
+
+.admin-splitter {
+    width: 6px;
+    background: #dfe3e8;
+    cursor: col-resize;
+    position: relative;
+    transition: background 0.2s;
+    user-select: none;
+    z-index: 100;
+}
+
+.admin-splitter:hover,
+.admin-splitter:active {
+    background: var(--color-accent);
+}
+
+.splitter-handle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 30px;
+    background: #fff;
+    border-radius: 2px;
+}
+
+.preview-card {
+    padding: 0 !important;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.preview-card h3 {
+    padding: 1rem 1.5rem;
+    margin-bottom: 0 !important;
+    font-size: 1.1rem;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+}
+
+.preview-container-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: #eee;
+    position: relative;
+    scrollbar-width: thin;
+}
+
+.preview-scaling-container {
+    transform: scale(0.65);
+    transform-origin: top left;
+    width: 153.8%;
+    /* 1 / 0.65 */
+    min-height: 100%;
+}
+
+/* Cropper Modal */
+.cropper-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    padding: 2rem;
+}
+
+.cropper-container {
+    position: relative;
+    flex-grow: 1;
+    width: 100%;
+    background: #333;
+}
+
+.cropper-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: #1a1a1a;
+}
+
+.zoom-range {
+    width: 300px;
+    accent-color: var(--color-accent);
+}
+
+.cropper-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.cropper-buttons .admin-btn {
+    width: auto;
+    min-width: 120px;
+}
+
+.cropper-buttons .admin-btn.cancel {
+    background: #444;
+}
+
+.cropper-buttons .admin-btn.save {
+    background: var(--color-primary);
 }

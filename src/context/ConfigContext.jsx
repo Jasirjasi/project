@@ -1,9 +1,8 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { supabase } from '../supabase';
 import defaultConfig from '../config'; // Our initial static config
 
-const ConfigContext = createContext(null);
+export const ConfigContext = createContext(null);
 
 export const useConfig = () => {
     const context = useContext(ConfigContext);
@@ -21,19 +20,29 @@ export const ConfigProvider = ({ children }) => {
     useEffect(() => {
         const fetchConfig = async () => {
             try {
-                const docRef = doc(db, 'settings', 'main');
-                const docSnap = await getDoc(docRef);
+                const { data, error: fetchError } = await supabase
+                    .from('settings')
+                    .select('config')
+                    .eq('id', 'main')
+                    .single();
 
-                if (docSnap.exists()) {
-                    setConfig(docSnap.data());
+                if (data) {
+                    setConfig(data.config);
                 } else {
-                    // If no config exists in Firestore, save the default config there
-                    await setDoc(docRef, defaultConfig);
+                    // If no config exists in Supabase, try to initialize it
+                    // Check if we have an active session (likely admin)
+                    const { data: { session } } = await supabase.auth.getSession();
+
+                    if (session) {
+                        await supabase
+                            .from('settings')
+                            .upsert({ id: 'main', config: defaultConfig });
+                    }
                     setConfig(defaultConfig);
                 }
             } catch (err) {
-                console.error("Failed to load config from Firebase:", err);
-                // Fallback to static config if Firebase fails (e.g., config missing during dev)
+                console.error("Failed to load config from Supabase:", err);
+                // Fallback to static config if Supabase fails
                 setConfig(defaultConfig);
                 setError(err.message);
             } finally {

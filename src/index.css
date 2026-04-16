@@ -1,15 +1,31 @@
-@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;1,300&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Infant:wght@300;400;500;600;700&family=Great+Vibes&family=Inter:wght@300;400;500;600&display=swap');
 
 :root {
-  --color-primary: #D4AF37; /* Gold */
-  --color-secondary: #FDFBF7; /* Cream */
-  --color-text: #4A4A4A; /* Dark Gray for text */
-  --color-accent: #E8D8C3; /* Pastel Beige */
-  --color-overlay: rgba(0, 0, 0, 0.4);
-  --font-heading: 'Playfair Display', serif;
-  --font-body: 'Lato', sans-serif;
-  
-  --transition-smooth: all 0.3s ease-in-out;
+  --color-primary: #DB2777;
+  /* Deep Pink */
+  --color-secondary: #F472B6;
+  /* Soft Pink */
+  --color-accent: #CA8A04;
+  /* Elegant Gold CTA */
+  --color-background: #FDF2F8;
+  /* Soft UI Background */
+  --color-text: #831843;
+  /* Dark Maroon Text */
+  --color-surface: #FFFFFF;
+  --color-overlay: rgba(131, 24, 67, 0.5);
+  /* Maroon overlay */
+
+  --font-heading: 'Cormorant Infant', serif;
+  --font-accent: 'Great Vibes', cursive;
+  --font-body: 'Inter', sans-serif;
+
+  --shadow-soft: 0 10px 40px -10px rgba(219, 39, 119, 0.15);
+  --shadow-md: 0 20px 50px -15px rgba(219, 39, 119, 0.25);
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-full: 9999px;
+
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * {
@@ -25,12 +41,18 @@ html {
 body {
   font-family: var(--font-body);
   color: var(--color-text);
-  background-color: var(--color-secondary);
+  background-color: var(--color-background);
   line-height: 1.6;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-heading);
   font-weight: 600;
   color: var(--color-primary);
@@ -75,4 +97,56 @@ img {
   width: 50px;
   height: 2px;
   background-color: var(--color-primary);
+}
+
+/* Traditional Decorations */
+.traditional-corner {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.traditional-corner.top-left {
+  top: 20px;
+  left: 20px;
+}
+
+.traditional-corner.top-right {
+  top: 20px;
+  right: 20px;
+  transform: rotate(90deg);
+}
+
+.traditional-corner.bottom-left {
+  bottom: 20px;
+  left: 20px;
+  transform: rotate(-90deg);
+}
+
+.traditional-corner.bottom-right {
+  bottom: 20px;
+  right: 20px;
+  transform: rotate(180deg);
+}
+
+.traditional-mandala {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  animation: rotate 60s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.parallax-bg {
+  transition: transform 0.1s ease-out;
 }
