@@ -35,8 +35,8 @@ const Hero = ({ isPreview = false }) => {
             )}
             
             <div className="hero-overlay" style={{ backgroundColor: config.hero?.overlayColor || 'var(--color-overlay)' }}></div>
-
-            {config.theme?.showParticles && <ParticlesBackground show={true} />}
+            
+            <ParticlesBackground show={config.hero?.showParticles !== false} />
 
             {config.theme?.traditionalMode && (
                 <>
@@ -56,9 +56,9 @@ const Hero = ({ isPreview = false }) => {
                 <h3 className="hero-subtitle" style={config.hero.subtitleStyle || {}}>{config.hero.subtitle}</h3>
                 <h1 className="hero-title" style={config.couple.namesFormattedStyle || {}}>
                     <BlurText
-                        text={config.couple.namesFormatted}
+                        text={`${config.couple.name1} & ${config.couple.name2}`}
                         delay={50}
-                        animateBy="chars"
+                        animateBy="words"
                         direction="top"
                     />
                 </h1>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { utils, writeFile } from 'xlsx';
 import { supabase } from '../supabase';
 import { useNavigate } from 'react-router-dom';
 import { useConfig, ConfigContext } from '../context/ConfigContext';
@@ -379,6 +380,32 @@ const AdminDashboard = () => {
             setIsCropping(true);
         };
     };
+    
+    const handleExportRSVPs = () => {
+        if (rsvps.length === 0) {
+            Swal.fire('No Data', 'There are no RSVPs to export.', 'info');
+            return;
+        }
+
+        // Format data for Excel
+        const exportData = rsvps.map(rsvp => ({
+            'Name': rsvp.name,
+            'Status': rsvp.guests === '0' ? 'Declined' : 'Attending',
+            'Number of Guests': rsvp.guests,
+            'Message': rsvp.message || '',
+            'Date Submitted': new Date(rsvp.created_at).toLocaleString()
+        }));
+
+        // Create worksheet
+        const ws = utils.json_to_sheet(exportData);
+        
+        // Create workbook
+        const wb = utils.book_new();
+        utils.book_append_sheet(wb, ws, 'RSVPs');
+
+        // Export file
+        writeFile(wb, `Wedding_RSVPs_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
 
     const currentColor = extractColor(editConfig.hero?.overlayColor);
 
@@ -469,10 +496,6 @@ const AdminDashboard = () => {
                                         </div>
 
                                         <div className="form-group" style={{ display: 'flex', gap: '2rem', marginTop: '1rem' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                <input type="checkbox" checked={editConfig.theme?.showParticles} onChange={(e) => handleConfigChange(e, 'theme', 'showParticles')} style={{ width: 'auto' }} />
-                                                <label style={{ margin: 0 }}>Show Particles</label>
-                                            </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                                 <input type="checkbox" checked={editConfig.theme?.traditionalMode} onChange={(e) => handleConfigChange(e, 'theme', 'traditionalMode')} style={{ width: 'auto' }} />
                                                 <label style={{ margin: 0 }}>Traditional Mode</label>
@@ -601,6 +624,10 @@ const AdminDashboard = () => {
                                                 />
                                             </div>
                                         </div>
+                                        <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <input type="checkbox" checked={editConfig.hero.showParticles !== false} onChange={(e) => handleConfigChange(e, 'hero', 'showParticles')} style={{ width: 'auto' }} />
+                                            <label style={{ margin: 0 }}>Enable Cinematic Particles</label>
+                                        </div>
                                         <div className="form-group">
                                             <label>Subtitle</label>
                                             <input value={editConfig.hero.subtitle} onChange={(e) => handleConfigChange(e, 'hero', 'subtitle')} />
@@ -687,7 +714,17 @@ const AdminDashboard = () => {
 
                 {activeTab === 'rsvps' && (
                     <div className="admin-card">
-                        <h3>Reservations ({rsvps.length})</h3>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                            <h3 style={{ margin: 0 }}>Reservations ({rsvps.length})</h3>
+                            <button 
+                                className="admin-btn" 
+                                style={{ width: 'auto', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                                onClick={handleExportRSVPs}
+                            >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                Export to Excel
+                            </button>
+                        </div>
                         <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
                             <thead>
                                 <tr style={{ textAlign: 'left', borderBottom: '2px solid #ddd', background: '#fcfaf8' }}>

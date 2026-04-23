@@ -57,18 +57,21 @@
 .admin-btn {
     width: 100%;
     padding: 1rem;
-    background: var(--color-accent);
+    background: var(--color-primary);
     color: white;
     border: none;
     border-radius: 6px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(129, 1, 0, 0.2);
 }
 
 .admin-btn:hover {
-    opacity: 0.9;
+    background: var(--color-secondary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(129, 1, 0, 0.3);
 }
 
 .admin-btn:disabled {
@@ -104,18 +107,25 @@
 }
 
 .admin-nav-btn {
-    padding: 0.5rem 1rem;
+    padding: 0.8rem 1.5rem;
     border: none;
     background: transparent;
     cursor: pointer;
-    font-weight: 500;
-    color: #666;
-    border-bottom: 2px solid transparent;
+    font-weight: 600;
+    color: #555;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+}
+
+.admin-nav-btn:hover {
+    color: var(--color-primary);
+    background: rgba(129, 1, 0, 0.05);
 }
 
 .admin-nav-btn.active {
-    color: var(--color-accent);
-    border-bottom-color: var(--color-accent);
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+    background: rgba(129, 1, 0, 0.08);
 }
 
 .admin-content {
@@ -166,7 +176,7 @@
 
 .admin-splitter:hover,
 .admin-splitter:active {
-    background: var(--color-accent);
+    background: var(--color-primary);
 }
 
 .splitter-handle {

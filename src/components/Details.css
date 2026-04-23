@@ -42,23 +42,27 @@
 }
 
 .map-btn {
-    display: inline-block;
-    padding: 0.8rem 2rem;
-    background-color: var(--color-accent);
+    display: block;
+    width: 100%;
+    padding: 1.2rem;
+    background-color: var(--color-primary);
     color: white;
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-md);
     text-transform: uppercase;
-    letter-spacing: 1px;
-    font-size: 0.9rem;
+    letter-spacing: 2px;
+    font-size: 1.1rem;
+    font-weight: 600;
     transition: var(--transition-smooth);
-    margin-top: 1rem;
+    margin-top: 1.5rem;
     border: none;
     cursor: pointer;
     text-decoration: none;
+    box-shadow: var(--shadow-soft);
 }
 
 .map-btn:hover {
-    background-color: #B27C03;
+    background-color: var(--color-secondary);
     transform: translateY(-2px);
-    box-shadow: var(--shadow-soft);
+    box-shadow: var(--shadow-md);
+    color: white;
 }

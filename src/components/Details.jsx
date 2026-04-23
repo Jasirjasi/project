@@ -29,9 +29,12 @@ const Details = () => {
                     <h3>The Venue</h3>
                     <p>{config.details.venue.name}</p>
                     <p className="highlight">{config.details.venue.address}</p>
-                    <a href={config.details.venue.mapUrl} target="https://maps.app.goo.gl/8eCL2YXpZkreyP5P8" rel="noopener noreferrer" className="map-btn">
+                    <button 
+                        onClick={() => window.open(config.details.venue.mapUrl, '_blank', 'noopener,noreferrer')}
+                        className="map-btn"
+                    >
                         View on Map
-                    </a>
+                    </button>
                 </div>
             </div>
         </section>
