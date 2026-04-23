@@ -8,6 +8,7 @@ import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import DeleteIcon from '@mui/icons-material/Delete';
 import gsap from 'gsap';
 import { Draggable } from 'gsap/Draggable';
+import { motion, AnimatePresence } from 'framer-motion';
 
 gsap.registerPlugin(Draggable);
 
@@ -17,6 +18,7 @@ const Gallery = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [images, setImages] = useState(() => config.images.map(src => ({ id: null, src })));
     const [uploadModalOpen, setUploadModalOpen] = useState(false);
+    const [viewMode, setViewMode] = useState('rotational'); // 'rotational' or 'grid'
     
     const containerRef = useRef(null);
     const itemsRef = useRef(null);
@@ -50,45 +52,60 @@ const Gallery = () => {
 
     // GSAP Rotational Logic
     useEffect(() => {
-        if (images.length === 0) return;
+        // Only run if we are in rotational mode and have images
+        if (viewMode !== 'rotational' || images.length === 0) {
+            if (draggableRef.current) {
+                draggableRef.current[0].kill();
+                draggableRef.current = null;
+            }
+            return;
+        }
 
-        let ctx = gsap.context(() => {
-            const items = gsap.utils.toArray('.gallery-item');
-            const degree = 18; // Gap between items in the arc
-            const radius = 800; // Distance to center of the circle
+        // Delay initialization until Framer Motion transition is complete (400ms + buffer)
+        const timer = setTimeout(() => {
+            if (!itemsRef.current) return;
 
-            // Initial positioning for the CONTAINER
-            gsap.set(itemsRef.current, {
-                transformOrigin: `center ${radius}px`
-            });
+            let ctx = gsap.context(() => {
+                const items = gsap.utils.toArray('.gallery-item');
+                const degree = 18; 
+                const radius = 800;
 
-            // Initial positioning for individual ITEMS
-            items.forEach((item, index) => {
-                gsap.set(item, {
-                    rotation: (index - (items.length - 1) / 2) * degree,
-                    transformOrigin: `center ${radius}px`
+                // Set initial container pivot
+                gsap.set(itemsRef.current, {
+                    transformOrigin: `center ${radius}px`,
+                    rotation: 0 // Reset rotation to center
                 });
-            });
 
-            // Make it draggable
-            if (draggableRef.current) draggableRef.current[0].kill();
-            
-            draggableRef.current = Draggable.create(itemsRef.current, {
-                type: "rotation",
-                onDragEnd: function() {
-                    const rotation = gsap.getProperty(this.target, "rotation");
-                    const snapRotation = Math.round(rotation / degree) * degree;
-                    gsap.to(this.target, { 
-                        rotation: snapRotation, 
-                        duration: 0.6,
-                        ease: "power3.out"
+                // Set individual item pivots
+                items.forEach((item, index) => {
+                    gsap.set(item, {
+                        rotation: (index - (items.length - 1) / 2) * degree,
+                        transformOrigin: `center ${radius}px`
                     });
-                }
-            });
-        }, containerRef);
+                });
 
-        return () => ctx.revert();
-    }, [images]);
+                // Re-initialize Draggable
+                if (draggableRef.current) draggableRef.current[0].kill();
+                
+                draggableRef.current = Draggable.create(itemsRef.current, {
+                    type: "rotation",
+                    onDragEnd: function() {
+                        const rotation = gsap.getProperty(this.target, "rotation");
+                        const snapRotation = Math.round(rotation / degree) * degree;
+                        gsap.to(this.target, { 
+                            rotation: snapRotation, 
+                            duration: 0.6,
+                            ease: "power3.out"
+                        });
+                    }
+                });
+            }, containerRef);
+
+            return () => ctx.revert();
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [images, viewMode]);
 
     const handleUploadSuccess = (newImages) => {
         if (Array.isArray(newImages)) {
@@ -154,42 +171,99 @@ const Gallery = () => {
     };
 
     return (
-        <section className="gallery-section section-container" id="gallery" ref={containerRef}>
+        <section className={`gallery-section section-container view-${viewMode}`} id="gallery" ref={containerRef}>
             <h2 className="section-title">Our Memories</h2>
 
-            {config.allowGuestUploads && (
-                <div className="gallery-actions">
+            <div className="gallery-controls">
+                <div className="view-toggle">
+                    <button 
+                        className={viewMode === 'rotational' ? 'active' : ''} 
+                        onClick={() => setViewMode('rotational')}
+                    >
+                        Rotational
+                    </button>
+                    <button 
+                        className={viewMode === 'grid' ? 'active' : ''} 
+                        onClick={() => setViewMode('grid')}
+                    >
+                        Grid View
+                    </button>
+                </div>
+                
+                {config.allowGuestUploads && (
                     <button className="upload-trigger-btn" onClick={() => setUploadModalOpen(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                         <PhotoCameraIcon fontSize="small" /> Upload Photo
                     </button>
-                </div>
-            )}
+                )}
+            </div>
 
-            <div className="gallery-viewport">
-                <div className="gallery-items-container" ref={itemsRef}>
-                    {images.map((imgObj, index) => (
-                        <div
-                            key={imgObj.id || `static-${index}`}
-                            className="gallery-item"
-                            onClick={() => openModal(index)}
-                        >
-                            <div className="item-inner">
-                                <button
-                                    className="delete-image-btn"
-                                    onClick={(e) => handleDelete(e, imgObj, index)}
-                                    title="Delete Photo"
+            <AnimatePresence mode="wait">
+                {viewMode === 'rotational' ? (
+                    <motion.div 
+                        key="rotational-view"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.4 }}
+                        className="gallery-viewport"
+                    >
+                        <div className="gallery-items-container" ref={itemsRef}>
+                            {images.map((imgObj, index) => (
+                                <div
+                                    key={imgObj.id || `rotational-${index}`}
+                                    className="gallery-item"
+                                    onClick={() => openModal(index)}
                                 >
-                                    <DeleteIcon fontSize="small" />
-                                </button>
-                                <img src={imgObj.src} alt="Couple photo" loading="lazy" />
-                                <div className="gallery-overlay">
-                                    <span>View</span>
+                                    <div className="item-inner">
+                                        <button
+                                            className="delete-image-btn"
+                                            onClick={(e) => handleDelete(e, imgObj, index)}
+                                            title="Delete Photo"
+                                        >
+                                            <DeleteIcon fontSize="small" />
+                                        </button>
+                                        <img src={imgObj.src} alt="Couple photo" loading="lazy" />
+                                        <div className="gallery-overlay">
+                                            <span>View</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                ) : (
+                    <motion.div 
+                        key="grid-view"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.4 }}
+                        className="gallery-grid"
+                    >
+                        {images.map((imgObj, index) => (
+                            <div
+                                key={imgObj.id || `grid-${index}`}
+                                className="gallery-item"
+                                onClick={() => openModal(index)}
+                            >
+                                <div className="item-inner">
+                                    <button
+                                        className="delete-image-btn"
+                                        onClick={(e) => handleDelete(e, imgObj, index)}
+                                        title="Delete Photo"
+                                    >
+                                        <DeleteIcon fontSize="small" />
+                                    </button>
+                                    <img src={imgObj.src} alt="Couple photo" loading="lazy" />
+                                    <div className="gallery-overlay">
+                                        <span>View</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
+                        ))}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {modalOpen && (
                 <div className="modal-backdrop" onClick={closeModal}>
