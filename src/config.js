@@ -11,8 +11,8 @@ const config = {
 
     // Theme Settings
     theme: {
-        primaryColor: "#DB2777",
-        textColor: "#831843",
+        primaryColor: "#810100",
+        textColor: "#1B1717",
         headingFont: "Cormorant Infant",
         bodyFont: "Inter",
         accentFont: "Great Vibes",
@@ -34,7 +34,7 @@ const config = {
         locationStyle: {},
         backgroundImage: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
         backgroundPosition: "center",
-        overlayColor: "rgba(131, 24, 67, 0.5)"
+        overlayColor: "rgba(27, 23, 23, 0.6)"
     },
 
     // Details Section

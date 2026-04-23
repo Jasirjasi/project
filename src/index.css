@@ -1,26 +1,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Infant:wght@300;400;500;600;700&family=Great+Vibes&family=Inter:wght@300;400;500;600&display=swap');
 
 :root {
-  --color-primary: #DB2777;
-  /* Deep Pink */
-  --color-secondary: #F472B6;
-  /* Soft Pink */
-  --color-accent: #CA8A04;
-  /* Elegant Gold CTA */
-  --color-background: #FDF2F8;
-  /* Soft UI Background */
-  --color-text: #831843;
-  /* Dark Maroon Text */
+  --color-primary: #810100;
+  /* Cherry Red */
+  --color-secondary: #630000;
+  /* Maroon */
+  --color-accent: #EDEBDD;
+  /* Cotton Cream */
+  --color-background: #EDEBDD;
+  /* Cotton Background */
+  --color-text: #1B1717;
+  /* Noir Black */
   --color-surface: #FFFFFF;
-  --color-overlay: rgba(131, 24, 67, 0.5);
-  /* Maroon overlay */
+  --color-overlay: rgba(27, 23, 23, 0.6);
+  /* Noir Black overlay */
 
   --font-heading: 'Cormorant Infant', serif;
   --font-accent: 'Great Vibes', cursive;
   --font-body: 'Inter', sans-serif;
 
-  --shadow-soft: 0 10px 40px -10px rgba(219, 39, 119, 0.15);
-  --shadow-md: 0 20px 50px -15px rgba(219, 39, 119, 0.25);
+  --shadow-soft: 0 10px 40px -10px rgba(129, 1, 0, 0.15);
+  --shadow-md: 0 20px 50px -15px rgba(129, 1, 0, 0.25);
   --radius-lg: 16px;
   --radius-md: 12px;
   --radius-full: 9999px;
@@ -86,6 +86,7 @@ img {
   font-size: 2.5rem;
   margin-bottom: 3rem;
   position: relative;
+  color: var(--color-surface) !important;
 }
 
 .section-title::after {

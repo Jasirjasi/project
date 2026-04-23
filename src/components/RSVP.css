@@ -14,8 +14,8 @@
 }
 
 .rsvp-subtitle {
-    color: #666;
-    margin-bottom: 2rem;
+    color: var(--color-text);
+    opacity: 0.7;
     font-style: italic;
 }
 
@@ -42,9 +42,9 @@
 .form-group select,
 .form-group textarea {
     padding: 1rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--color-primary);
     border-radius: var(--radius-md);
-    background-color: #fafafa;
+    background-color: var(--color-surface);
     font-family: var(--font-body);
     font-size: 1rem;
     transition: var(--transition-smooth);
@@ -55,7 +55,7 @@
 .form-group textarea:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.15);
+    box-shadow: 0 0 0 3px rgba(129, 1, 0, 0.15);
 }
 
 .submit-btn {
@@ -73,23 +73,22 @@
 }
 
 .submit-btn:hover {
-    background-color: #BE185D;
-    /* Darker deep pink */
+    background-color: var(--color-secondary);
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
 
 .success-message {
     padding: 3rem;
-    background-color: #f8fcf8;
-    border: 1px solid #e0f0e0;
+    background-color: var(--color-accent);
+    border: 1px solid var(--color-primary);
     border-radius: 8px;
-    color: #2e7d32;
+    color: var(--color-primary);
     animation: fadeIn 0.5s;
 }
 
 .success-message h3 {
-    color: #2e7d32;
+    color: var(--color-primary);
     margin-bottom: 0.5rem;
 }
 

@@ -12,7 +12,7 @@ footer {
   text-align: center;
   padding: 2rem;
   background-color: var(--color-primary);
-  color: white;
+  color: var(--color-accent);
   font-family: var(--font-heading);
   letter-spacing: 1px;
 }

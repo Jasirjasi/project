@@ -41,7 +41,7 @@ const ParticlesBackground = ({ show }) => {
             },
             particles: {
                 color: {
-                    value: ["#FFD700", "#FFF", "#FFE4E1", "#FADADD"], // Gold, White, Misty Rose, Pale Pink
+                    value: ["#EDEBDD", "#810100", "#FFF", "#630000"], // Cotton, Cherry Red, White, Maroon
                 },
                 links: {
                     enable: false,

@@ -1,7 +1,7 @@
 .countdown-section {
     text-align: center;
-    background-color: var(--color-secondary);
-    color: white;
+    background-color: var(--color-primary);
+    color: var(--color-accent);
     padding: 5rem 2rem;
     border-radius: var(--radius-lg);
     margin: 2rem auto;
