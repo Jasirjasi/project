@@ -7,17 +7,34 @@ import { motion } from 'framer-motion';
 
 const Hero = ({ isPreview = false }) => {
     const { config } = useConfig();
+    const bgType = config.hero?.backgroundType || 'image';
+    const bgUrl = config.hero?.backgroundImage || '';
+
     return (
-        <section
-            className="hero"
-            id="home"
-            style={{
-                backgroundImage: `url('${config.hero.backgroundImage}')`,
-                backgroundPosition: config.hero.backgroundPosition || 'center',
-                backgroundAttachment: isPreview ? 'scroll' : 'fixed'
-            }}
-        >
-            <div className="hero-overlay" style={{ backgroundColor: config.hero.overlayColor || 'var(--color-overlay)' }}></div>
+        <section className="hero" id="home">
+            {bgType === 'video' && bgUrl ? (
+                <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="hero-video-bg"
+                    key={bgUrl}
+                >
+                    <source src={bgUrl} type="video/mp4" />
+                    Your browser does not support the video tag.
+                </video>
+            ) : (
+                <div 
+                    className={`hero-image-bg ${config.hero?.useKenBurns !== false ? 'ken-burns' : ''}`}
+                    style={{
+                        backgroundImage: `url('${bgUrl}')`,
+                        backgroundPosition: config.hero?.backgroundPosition || 'center',
+                    }}
+                ></div>
+            )}
+            
+            <div className="hero-overlay" style={{ backgroundColor: config.hero?.overlayColor || 'var(--color-overlay)' }}></div>
 
             {config.theme?.showParticles && <ParticlesBackground show={true} />}
 

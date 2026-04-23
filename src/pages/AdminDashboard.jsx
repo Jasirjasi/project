@@ -395,6 +395,7 @@ const AdminDashboard = () => {
                 <button className={`admin-nav-btn ${activeTab === 'config' ? 'active' : ''}`} onClick={() => setActiveTab('config')}>Configuration</button>
                 <button className={`admin-nav-btn ${activeTab === 'rsvps' ? 'active' : ''}`} onClick={() => setActiveTab('rsvps')}>RSVPs</button>
                 <button className={`admin-nav-btn ${activeTab === 'fonts' ? 'active' : ''}`} onClick={() => setActiveTab('fonts')}>Font Library</button>
+                <button className={`admin-nav-btn ${activeTab === 'music' ? 'active' : ''}`} onClick={() => setActiveTab('music')}>Music Library</button>
                 <button className={`admin-nav-btn ${activeTab === 'gallery' ? 'active' : ''}`} onClick={() => setActiveTab('gallery')}>Gallery Storage</button>
             </nav>
 
@@ -482,46 +483,94 @@ const AdminDashboard = () => {
                                     <div>
                                         <h4 style={{ marginBottom: '1rem', color: '#666' }}>Hero Section</h4>
                                         <div className="form-group">
-                                            <label>Background Image</label>
+                                            <label>Background Type</label>
+                                            <select 
+                                                value={editConfig.hero.backgroundType || 'image'} 
+                                                onChange={(e) => handleConfigChange(e, 'hero', 'backgroundType')}
+                                                style={{ marginBottom: '1rem' }}
+                                            >
+                                                <option value="image">Image (with Ken Burns Effect)</option>
+                                                <option value="video">Cinematic Video</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label>{(editConfig.hero.backgroundType === 'video' ? 'Hero Video' : 'Background Image')}</label>
                                             <input
                                                 type="file"
-                                                accept="image/png, image/jpeg, image/jpg, image/webp"
-                                                onChange={handleImageUpload}
+                                                accept={editConfig.hero.backgroundType === 'video' ? "video/mp4,video/webm" : "image/png, image/jpeg, image/jpg, image/webp"}
+                                                onChange={async (e) => {
+                                                    const file = e.target.files[0];
+                                                    if (!file) return;
+
+                                                    if (editConfig.hero.backgroundType === 'video') {
+                                                        // Handle Video Upload
+                                                        try {
+                                                            Swal.fire({ title: 'Uploading Video...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+                                                            const storagePath = `hero/${Date.now()}_${file.name}`;
+                                                            const { data, error } = await supabase.storage.from('hero-media').upload(storagePath, file);
+                                                            if (error) throw error;
+                                                            const { data: { publicUrl } } = supabase.storage.from('hero-media').getPublicUrl(storagePath);
+                                                            setEditConfig(prev => ({ ...prev, hero: { ...prev.hero, backgroundImage: publicUrl } }));
+                                                            Swal.fire('Uploaded!', 'Video background has been updated.', 'success');
+                                                        } catch (err) {
+                                                            console.error(err);
+                                                            Swal.fire('Error', 'Failed to upload video. Ensure a bucket named "hero-media" exists.', 'error');
+                                                        }
+                                                    } else {
+                                                        // Handle Image Upload (existing crop logic)
+                                                        handleImageUpload(e);
+                                                    }
+                                                }}
                                             />
                                             {editConfig.hero.backgroundImage && (
                                                 <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                                                     <div style={{ width: '100%', position: 'relative' }}>
-                                                        <img
-                                                            src={editConfig.hero.backgroundImage}
-                                                            alt="preview"
-                                                            style={{
-                                                                width: '100%',
-                                                                height: '100px',
-                                                                objectFit: 'cover',
-                                                                borderRadius: '4px',
-                                                                border: '1px solid #ddd',
-                                                                backgroundPosition: editConfig.hero.backgroundPosition || 'center'
-                                                            }}
-                                                        />
+                                                        {editConfig.hero.backgroundType === 'video' ? (
+                                                            <video 
+                                                                src={editConfig.hero.backgroundImage} 
+                                                                muted loop autoPlay 
+                                                                style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #ddd' }}
+                                                            />
+                                                        ) : (
+                                                            <img
+                                                                src={editConfig.hero.backgroundImage}
+                                                                alt="preview"
+                                                                style={{
+                                                                    width: '100%',
+                                                                    height: '100px',
+                                                                    objectFit: 'cover',
+                                                                    borderRadius: '4px',
+                                                                    border: '1px solid #ddd',
+                                                                    backgroundPosition: editConfig.hero.backgroundPosition || 'center'
+                                                                }}
+                                                            />
+                                                        )}
                                                     </div>
-                                                    <div style={{ marginTop: '0.5rem', width: '100%' }}>
-                                                        <label style={{ fontSize: '0.8rem', color: '#666' }}>View Position</label>
-                                                        <select
-                                                            value={editConfig.hero.backgroundPosition || 'center'}
-                                                            onChange={(e) => handleConfigChange(e, 'hero', 'backgroundPosition')}
-                                                            style={{ marginTop: '0.2rem' }}
-                                                        >
-                                                            {BACKGROUND_POSITIONS.map(pos => (
-                                                                <option key={pos.value} value={pos.value}>{pos.name}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
+                                                    {editConfig.hero.backgroundType === 'image' && (
+                                                        <div style={{ marginTop: '0.5rem', width: '100%' }}>
+                                                            <label style={{ fontSize: '0.8rem', color: '#666' }}>View Position</label>
+                                                            <select
+                                                                value={editConfig.hero.backgroundPosition || 'center'}
+                                                                onChange={(e) => handleConfigChange(e, 'hero', 'backgroundPosition')}
+                                                                style={{ marginTop: '0.2rem' }}
+                                                            >
+                                                                {BACKGROUND_POSITIONS.map(pos => (
+                                                                    <option key={pos.value} value={pos.value}>{pos.name}</option>
+                                                                ))}
+                                                            </select>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                                                <input type="checkbox" checked={editConfig.hero.useKenBurns !== false} onChange={(e) => handleConfigChange(e, 'hero', 'useKenBurns')} style={{ width: 'auto' }} />
+                                                                <label style={{ margin: 0, fontSize: '0.8rem' }}>Use Ken Burns Zoom Effect</label>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                     <button
                                                         className="admin-btn"
                                                         style={{ marginTop: '0.5rem', background: '#dc3545', width: 'auto', padding: '0.4rem 0.8rem', fontSize: '0.9rem' }}
                                                         onClick={() => setEditConfig(prev => ({ ...prev, hero: { ...prev.hero, backgroundImage: '' } }))}
                                                     >
-                                                        Remove Image
+                                                        Remove Media
                                                     </button>
                                                 </div>
                                             )}
@@ -757,6 +806,98 @@ const AdminDashboard = () => {
                                         </li>
                                     ))}
                                 </ul>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'music' && (
+                    <div className="admin-card">
+                        <h3>Music Playlist Manager</h3>
+                        <p style={{ marginBottom: '2rem', color: '#666' }}>Upload background music (.mp3) to play across the website. Multiple songs will be played in a sequence.</p>
+                        
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                            <div>
+                                <h4 style={{ marginBottom: '1rem' }}>Add Songs</h4>
+                                <div className="admin-form" style={{ marginBottom: '2rem' }}>
+                                    <div className="form-group" style={{ background: '#fcfaf8', padding: '1.5rem', border: '2px dashed #ddd', borderRadius: '8px', textAlign: 'center' }}>
+                                        <input
+                                            type="file"
+                                            multiple
+                                            accept="audio/mp3,audio/mpeg"
+                                            onChange={async (e) => {
+                                                const files = Array.from(e.target.files);
+                                                if (files.length === 0) return;
+
+                                                try {
+                                                    Swal.fire({ title: 'Uploading Music...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+                                                    
+                                                    const newUrls = [];
+                                                    for (const file of files) {
+                                                        const storagePath = `playlist/${Date.now()}_${file.name}`;
+                                                        const { data, error } = await supabase.storage.from('music').upload(storagePath, file);
+                                                        if (error) throw error;
+                                                        const { data: { publicUrl } } = supabase.storage.from('music').getPublicUrl(storagePath);
+                                                        newUrls.push(publicUrl);
+                                                    }
+
+                                                    const updatedPlaylist = [...(editConfig.playlist || []), ...newUrls];
+                                                    const newConfig = { ...editConfig, playlist: updatedPlaylist };
+                                                    setEditConfig(newConfig);
+                                                    await persistConfig(newConfig);
+                                                    
+                                                    Swal.fire('Success!', `${files.length} song(s) added to playlist.`, 'success');
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    Swal.fire('Error', 'Failed to upload music. Ensure a bucket named "music" exists.', 'error');
+                                                }
+                                            }}
+                                            style={{ display: 'none' }}
+                                            id="music-upload-input"
+                                        />
+                                        <button
+                                            className="admin-btn"
+                                            style={{ width: 'auto' }}
+                                            onClick={() => document.getElementById('music-upload-input').click()}
+                                        >
+                                            Select MP3 Files
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 style={{ marginBottom: '1rem' }}>Current Playlist</h4>
+                                <ul style={{ listStyle: 'none', padding: 0 }}>
+                                    {(editConfig.playlist || []).map((url, i) => {
+                                        const filename = url.split('/').pop().split('_').pop();
+                                        return (
+                                            <li key={i} style={{ padding: '0.8rem', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
+                                                    <span style={{ fontSize: '0.8rem', color: '#999' }}>{i + 1}.</span>
+                                                    <span style={{ fontSize: '0.9rem', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }} title={filename}>{filename}</span>
+                                                </div>
+                                                <button
+                                                    style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', fontSize: '1.2rem' }}
+                                                    onClick={() => {
+                                                        const newPlaylist = editConfig.playlist.filter((_, idx) => idx !== i);
+                                                        setEditConfig(prev => ({ ...prev, playlist: newPlaylist }));
+                                                    }}
+                                                >&times;</button>
+                                            </li>
+                                        );
+                                    })}
+                                    {(editConfig.playlist || []).length === 0 && <p style={{ color: '#999', fontSize: '0.9rem' }}>No music added yet.</p>}
+                                </ul>
+                                {(editConfig.playlist || []).length > 0 && (
+                                    <button 
+                                        className="admin-btn" 
+                                        style={{ marginTop: '1rem', background: '#28a745' }}
+                                        onClick={handleSaveConfig}
+                                    >
+                                        Save Playlist Order
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>

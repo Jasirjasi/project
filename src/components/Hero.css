@@ -3,15 +3,42 @@
     height: 100vh;
     min-height: 500px;
     width: 100%;
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    /* Parallax effect */
+    overflow: hidden; /* Hide overflowing background animations */
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
     color: white;
+}
+
+.hero-video-bg,
+.hero-image-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+
+.hero-image-bg {
+    background-size: cover;
+    background-position: center;
+}
+
+/* Ken Burns Effect */
+.ken-burns {
+    animation: kenBurnsAnimation 20s ease-in-out infinite alternate;
+}
+
+@keyframes kenBurnsAnimation {
+    0% {
+        transform: scale(1) translate(0, 0);
+    }
+    100% {
+        transform: scale(1.15) translate(-2%, -2%);
+    }
 }
 
 .hero-overlay {
@@ -29,7 +56,6 @@
     z-index: 3;
     padding: 2rem;
     max-width: 800px;
-    animation: fadeInDown 1.5s ease-out;
 }
 
 .hero-subtitle {
@@ -66,18 +92,6 @@
     margin-bottom: 0.5rem;
 }
 
-@keyframes fadeInDown {
-    from {
-        opacity: 0;
-        transform: translateY(-30px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 @media (max-width: 768px) {
     .hero-title {
         font-size: 3.5rem;
@@ -86,5 +100,9 @@
     .hero-date,
     .hero-location {
         font-size: 1.2rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 2rem;
     }
 }
