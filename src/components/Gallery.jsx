@@ -40,8 +40,12 @@ const Gallery = () => {
         }
     }, [config.allowGuestUploads, config.images]);
 
-    const handleUploadSuccess = (newImageObj) => {
-        setImages(prev => [...prev, newImageObj]);
+    const handleUploadSuccess = (newImages) => {
+        if (Array.isArray(newImages)) {
+            setImages(prev => [...prev, ...newImages]);
+        } else {
+            setImages(prev => [...prev, newImages]);
+        }
     };
 
     const openModal = (index) => {

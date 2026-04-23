@@ -10,16 +10,17 @@ const UploadModal = ({ isOpen, onClose, onUploadSuccess }) => {
         if (!isOpen) return;
 
         const openUploadDialog = async () => {
-            const { value: file } = await Swal.fire({
+            const { value: fileResults } = await Swal.fire({
                 title: 'Upload a Memory',
                 text: 'Share photos you took at our wedding!',
                 input: 'file',
                 inputAttributes: {
                     'accept': 'image/png, image/jpeg, image/jpg, image/webp',
-                    'aria-label': 'Upload your family photo'
+                    'aria-label': 'Upload your family photos',
+                    'multiple': 'multiple'
                 },
                 showCancelButton: true,
-                confirmButtonText: 'Upload Photo',
+                confirmButtonText: 'Upload Photos',
                 showLoaderOnConfirm: true,
                 customClass: {
                     input: 'swal2-custom-file-input',
@@ -27,47 +28,58 @@ const UploadModal = ({ isOpen, onClose, onUploadSuccess }) => {
                     confirmButton: 'swal2-custom-confirm-btn',
                     cancelButton: 'swal2-custom-cancel-btn'
                 },
-                preConfirm: async (selectedFile) => {
-                    if (!selectedFile) {
-                        Swal.showValidationMessage('Please select a photo to upload.');
+                preConfirm: async (selectedFiles) => {
+                    if (!selectedFiles || (selectedFiles instanceof FileList && selectedFiles.length === 0)) {
+                        Swal.showValidationMessage('Please select at least one photo to upload.');
                         return false;
                     }
 
+                    // Ensure selectedFiles is an array/iterable
+                    const filesToUpload = selectedFiles instanceof FileList ? Array.from(selectedFiles) : [selectedFiles];
+
                     try {
-                        // Convert file to base64
-                        const base64String = await new Promise((resolve, reject) => {
-                            const reader = new FileReader();
-                            reader.readAsDataURL(selectedFile);
-                            reader.onload = () => resolve(reader.result);
-                            reader.onerror = error => reject(error);
+                        const uploadPromises = filesToUpload.map(async (file) => {
+                            // Convert file to base64
+                            const base64String = await new Promise((resolve, reject) => {
+                                const reader = new FileReader();
+                                reader.readAsDataURL(file);
+                                reader.onload = () => resolve(reader.result);
+                                reader.onerror = error => reject(error);
+                            });
+                            return base64String;
                         });
 
-                        // Store base64 in Supabase 'images' table
+                        const base64Strings = await Promise.all(uploadPromises);
+
+                        // Batch store in Supabase 'images' table
                         const { data, error: insertError } = await supabase
                             .from('images')
-                            .insert([{ url: base64String }])
+                            .insert(base64Strings.map(url => ({ url })))
                             .select();
 
                         if (insertError) throw insertError;
 
-                        return { url: base64String, id: data[0].id };
+                        return data.map((row, index) => ({
+                            url: row.url,
+                            id: row.id
+                        }));
                     } catch (err) {
                         console.error(err);
-                        Swal.showValidationMessage('Failed to upload photo. Please try again.');
+                        Swal.showValidationMessage('Failed to upload photos. Please try again.');
                     }
                 },
                 allowOutsideClick: () => !Swal.isLoading()
             });
 
-            if (file && file.url) {
+            if (fileResults && fileResults.length > 0) {
                 Swal.fire({
                     title: 'Success!',
-                    text: 'Photo uploaded successfully!',
+                    text: `${fileResults.length} photo(s) uploaded successfully!`,
                     icon: 'success',
                     timer: 1500,
                     showConfirmButton: false
                 });
-                onUploadSuccess({ id: file.id, src: file.url });
+                onUploadSuccess(fileResults.map(f => ({ id: f.id, src: f.url })));
             }
 
             // Close the React state for modal open regardless

@@ -20,66 +20,83 @@ const ParticlesBackground = ({ show }) => {
 
     const options = useMemo(
         () => ({
-            fpsLimit: 60,
+            fpsLimit: 120,
             interactivity: {
                 events: {
                     onHover: {
                         enable: true,
                         mode: "bubble",
                     },
+                    resize: true,
                 },
                 modes: {
                     bubble: {
-                        distance: 200,
+                        distance: 250,
                         duration: 2,
-                        opacity: 0.8,
-                        size: 10,
+                        opacity: 1,
+                        size: 6,
+                        color: "#fff"
                     },
                 },
             },
             particles: {
                 color: {
-                    value: "#FFD700", // Bright Gold
+                    value: ["#FFD700", "#FFF", "#FFE4E1", "#FADADD"], // Gold, White, Misty Rose, Pale Pink
                 },
                 links: {
                     enable: false,
                 },
                 move: {
-                    direction: "none",
+                    direction: "bottom", // Falling down like petals/stardust
                     enable: true,
                     outModes: {
                         default: "out",
                     },
                     random: true,
-                    speed: 1.5,
+                    speed: { min: 0.5, max: 1.5 },
                     straight: false,
+                    spin: {
+                        enable: true,
+                        acceleration: 0.1
+                    }
                 },
                 number: {
                     density: {
                         enable: true,
                         area: 800,
                     },
-                    value: 80, // Increased count
+                    value: 120, // Premium density
                 },
                 opacity: {
-                    value: { min: 0.3, max: 0.8 }, // Increased opacity
+                    value: { min: 0.1, max: 0.7 },
                     animation: {
                         enable: true,
                         speed: 1,
-                        minimumValue: 0.3,
+                        minimumValue: 0.1,
+                        sync: false
                     }
                 },
                 shape: {
-                    type: "circle",
+                    type: ["circle", "star"], // Mixed shapes for elegance
                 },
                 size: {
-                    value: { min: 1, max: 4 },
+                    value: { min: 1, max: 5 },
                     animation: {
                         enable: true,
-                        speed: 3,
-                        minimumValue: 1,
+                        speed: 2,
+                        minimumValue: 0.5,
+                        sync: false
                     }
                 },
+                wobble: {
+                    enable: true,
+                    distance: 10,
+                    speed: 10
+                },
+                roll: {
+                    enable: true,
+                    speed: { min: 5, max: 15 }
+                }
             },
             detectRetina: true,
             fullScreen: {

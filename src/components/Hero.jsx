@@ -47,7 +47,7 @@ const Hero = ({ isPreview = false }) => {
                 </h1>
                 <div className="hero-divider"></div>
                 <p className="hero-date" style={config.hero.dateStyle || {}}>
-                    {config.hero.dateText} {config.hero.timeText && <span style={config.hero.timeStyle || {}}>at {config.hero.timeText}</span>}
+                    {config.hero.dateText} {config.hero.timeText && <span style={config.hero.timeStyle || {}}>{config.hero.timeText}</span>}
                 </p>
                 <p className="hero-location" style={config.hero.locationStyle || {}}>{config.hero.locationText}</p>
             </motion.div>
