@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './Gallery.css';
 import { useConfig } from '../context/ConfigContext';
 import { supabase } from '../supabase';
@@ -6,13 +6,21 @@ import UploadModal from './UploadModal';
 import Swal from 'sweetalert2';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import DeleteIcon from '@mui/icons-material/Delete';
+import gsap from 'gsap';
+import { Draggable } from 'gsap/Draggable';
+
+gsap.registerPlugin(Draggable);
 
 const Gallery = () => {
     const { config } = useConfig();
     const [modalOpen, setModalOpen] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [images, setImages] = useState(() => config.images.map(src => ({ id: null, src }))); // Use images from config as objects
+    const [images, setImages] = useState(() => config.images.map(src => ({ id: null, src })));
     const [uploadModalOpen, setUploadModalOpen] = useState(false);
+    
+    const containerRef = useRef(null);
+    const itemsRef = useRef(null);
+    const draggableRef = useRef(null);
 
     // Fetch dynamically uploaded images on mount
     useEffect(() => {
@@ -33,12 +41,54 @@ const Gallery = () => {
                     const configImgs = config.images.map(src => ({ id: null, src }));
                     setImages([...configImgs, ...loadedImages]);
                 } catch (err) {
-                    console.error("Error fetching images from firestore", err);
+                    console.error("Error fetching images from supabase", err);
                 }
             };
             fetchImages();
         }
     }, [config.allowGuestUploads, config.images]);
+
+    // GSAP Rotational Logic
+    useEffect(() => {
+        if (images.length === 0) return;
+
+        let ctx = gsap.context(() => {
+            const items = gsap.utils.toArray('.gallery-item');
+            const degree = 18; // Gap between items in the arc
+            const radius = 800; // Distance to center of the circle
+
+            // Initial positioning for the CONTAINER
+            gsap.set(itemsRef.current, {
+                transformOrigin: `center ${radius}px`
+            });
+
+            // Initial positioning for individual ITEMS
+            items.forEach((item, index) => {
+                gsap.set(item, {
+                    rotation: (index - (items.length - 1) / 2) * degree,
+                    transformOrigin: `center ${radius}px`
+                });
+            });
+
+            // Make it draggable
+            if (draggableRef.current) draggableRef.current[0].kill();
+            
+            draggableRef.current = Draggable.create(itemsRef.current, {
+                type: "rotation",
+                onDragEnd: function() {
+                    const rotation = gsap.getProperty(this.target, "rotation");
+                    const snapRotation = Math.round(rotation / degree) * degree;
+                    gsap.to(this.target, { 
+                        rotation: snapRotation, 
+                        duration: 0.6,
+                        ease: "power3.out"
+                    });
+                }
+            });
+        }, containerRef);
+
+        return () => ctx.revert();
+    }, [images]);
 
     const handleUploadSuccess = (newImages) => {
         if (Array.isArray(newImages)) {
@@ -51,7 +101,7 @@ const Gallery = () => {
     const openModal = (index) => {
         setCurrentIndex(index);
         setModalOpen(true);
-        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        document.body.style.overflow = 'hidden';
     };
 
     const closeModal = () => {
@@ -70,7 +120,7 @@ const Gallery = () => {
     };
 
     const handleDelete = async (e, imageObj, index) => {
-        e.stopPropagation(); // prevent modal from opening
+        e.stopPropagation();
 
         const result = await Swal.fire({
             title: 'Are you sure?',
@@ -83,7 +133,6 @@ const Gallery = () => {
         });
 
         if (result.isConfirmed) {
-            // Check if it's an uploaded image dynamically served from Firestore
             if (imageObj.id) {
                 try {
                     const { error: deleteError } = await supabase
@@ -92,29 +141,20 @@ const Gallery = () => {
                         .eq('id', imageObj.id);
                     if (deleteError) throw deleteError;
                     setImages(prev => prev.filter((_, i) => i !== index));
-                    Swal.fire(
-                        'Deleted!',
-                        'Your photo has been deleted.',
-                        'success'
-                    );
+                    Swal.fire('Deleted!', 'Your photo has been deleted.', 'success');
                 } catch (err) {
                     console.error('Delete error:', err);
                     Swal.fire('Error!', 'Something went wrong while deleting.', 'error');
                 }
             } else {
-                // If it's a default config image, just remove from UI
                 setImages(prev => prev.filter((_, i) => i !== index));
-                Swal.fire(
-                    'Removed!',
-                    'Photo has been removed from view.',
-                    'success'
-                );
+                Swal.fire('Removed!', 'Photo has been removed from view.', 'success');
             }
         }
     };
 
     return (
-        <section className="gallery-section section-container" id="gallery">
+        <section className="gallery-section section-container" id="gallery" ref={containerRef}>
             <h2 className="section-title">Our Memories</h2>
 
             {config.allowGuestUploads && (
@@ -125,39 +165,42 @@ const Gallery = () => {
                 </div>
             )}
 
-            <div className="gallery-grid">
-                {images.map((imgObj, index) => (
-                    <div
-                        key={imgObj.id || index}
-                        className="gallery-item"
-                        onClick={() => openModal(index)}
-                    >
-                        <img src={imgObj.src} alt="Couple photo" loading="lazy" />
-                        <div className="gallery-overlay">
-                            <span>View</span>
-                        </div>
-                        <button
-                            className="delete-image-btn"
-                            onClick={(e) => handleDelete(e, imgObj, index)}
-                            title="Delete Photo"
+            <div className="gallery-viewport">
+                <div className="gallery-items-container" ref={itemsRef}>
+                    {images.map((imgObj, index) => (
+                        <div
+                            key={imgObj.id || `static-${index}`}
+                            className="gallery-item"
+                            onClick={() => openModal(index)}
                         >
-                            <DeleteIcon fontSize="small" />
-                        </button>
-                    </div>
-                ))}
+                            <div className="item-inner">
+                                <button
+                                    className="delete-image-btn"
+                                    onClick={(e) => handleDelete(e, imgObj, index)}
+                                    title="Delete Photo"
+                                >
+                                    <DeleteIcon fontSize="small" />
+                                </button>
+                                <img src={imgObj.src} alt="Couple photo" loading="lazy" />
+                                <div className="gallery-overlay">
+                                    <span>View</span>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {modalOpen && (
                 <div className="modal-backdrop" onClick={closeModal}>
                     <button className="modal-close" onClick={closeModal}>&times;</button>
-
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <button className="nav-btn prev" onClick={prevImage}>&#10094;</button>
                         <img
                             src={images[currentIndex]?.src}
                             alt="Enlarged couple view"
                             className="modal-img fade-in"
-                            key={currentIndex} /* Key change forces re-render for animation */
+                            key={currentIndex}
                         />
                         <button className="nav-btn next" onClick={nextImage}>&#10095;</button>
                     </div>
