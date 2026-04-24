@@ -979,7 +979,7 @@ const AdminDashboard = () => {
                             onZoomChange={setZoom}
                         />
                     </div>
-                    <div className="cropper-buttons">
+                    <div className="cropper-controls">
                         <input
                             type="range"
                             value={zoom}
