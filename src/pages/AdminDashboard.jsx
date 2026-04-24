@@ -740,36 +740,38 @@ const AdminDashboard = () => {
                                 Export to Excel
                             </button>
                         </div>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
-                            <thead>
-                                <tr style={{ textAlign: 'left', borderBottom: '2px solid #ddd', background: '#fcfaf8' }}>
-                                    <th style={{ padding: '1rem 0.8rem' }}>Name</th>
-                                    <th style={{ padding: '1rem 0.8rem' }}>Guests</th>
-                                    <th style={{ padding: '1rem 0.8rem' }}>Message</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {rsvps.map(rsvp => (
-                                    <tr key={rsvp.id} style={{ borderBottom: '1px solid #eee' }}>
-                                        <td style={{ padding: '0.8rem' }}>{rsvp.name}</td>
-                                        <td style={{ padding: '0.8rem' }}>
-                                            <span style={{
-                                                background: rsvp.guests === '0' ? '#ffebee' : '#e8f5e9',
-                                                color: rsvp.guests === '0' ? '#c62828' : '#2e7d32',
-                                                padding: '0.3rem 0.6rem',
-                                                borderRadius: '4px',
-                                                fontSize: '0.9rem',
-                                                fontWeight: 'bold'
-                                            }}>
-                                                {rsvp.guests === '0' ? 'Declined' : `${rsvp.guests} Attending`}
-                                            </span>
-                                        </td>
-                                        <td style={{ padding: '0.8rem', color: '#666' }}>{rsvp.message || '-'}</td>
+                        <div className="admin-table-container">
+                            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
+                                <thead>
+                                    <tr style={{ textAlign: 'left', borderBottom: '2px solid #ddd', background: '#fcfaf8' }}>
+                                        <th style={{ padding: '1rem 0.8rem' }}>Name</th>
+                                        <th style={{ padding: '1rem 0.8rem' }}>Guests</th>
+                                        <th style={{ padding: '1rem 0.8rem' }}>Message</th>
                                     </tr>
-                                ))}
-                                {rsvps.length === 0 && <tr><td colSpan="3" style={{ padding: '2rem', textAlign: 'center', color: '#999' }}>No RSVPs have been submitted yet.</td></tr>}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {rsvps.map(rsvp => (
+                                        <tr key={rsvp.id} style={{ borderBottom: '1px solid #eee' }}>
+                                            <td style={{ padding: '0.8rem' }}>{rsvp.name}</td>
+                                            <td style={{ padding: '0.8rem' }}>
+                                                <span style={{
+                                                    background: rsvp.guests === '0' ? '#ffebee' : '#e8f5e9',
+                                                    color: rsvp.guests === '0' ? '#c62828' : '#2e7d32',
+                                                    padding: '0.3rem 0.6rem',
+                                                    borderRadius: '4px',
+                                                    fontSize: '0.9rem',
+                                                    fontWeight: 'bold'
+                                                }}>
+                                                    {rsvp.guests === '0' ? 'Declined' : `${rsvp.guests} Attending`}
+                                                </span>
+                                            </td>
+                                            <td style={{ padding: '0.8rem', color: '#666' }}>{rsvp.message || '-'}</td>
+                                        </tr>
+                                    ))}
+                                    {rsvps.length === 0 && <tr><td colSpan="3" style={{ padding: '2rem', textAlign: 'center', color: '#999' }}>No RSVPs have been submitted yet.</td></tr>}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 )}
 
@@ -778,7 +780,7 @@ const AdminDashboard = () => {
                         <h3>Font Library</h3>
                         <p style={{ marginBottom: '2rem', color: '#666' }}>Add fonts stored in <code style={{ background: '#eee', padding: '0.2rem 0.4rem', borderRadius: '4px' }}>public/fonts/</code> to have them appear in dropdowns.</p>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                        <div className="admin-grid-2col">
                             <div>
                                 <h4 style={{ marginBottom: '1rem' }}>Upload & Auto-Register</h4>
                                 <div className="admin-form" style={{ marginBottom: '2rem' }}>
@@ -868,7 +870,7 @@ const AdminDashboard = () => {
                         <h3>Music Playlist Manager</h3>
                         <p style={{ marginBottom: '2rem', color: '#666' }}>Upload background music (.mp3) to play across the website. Multiple songs will be played in a sequence.</p>
                         
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                        <div className="admin-grid-2col">
                             <div>
                                 <h4 style={{ marginBottom: '1rem' }}>Add Songs</h4>
                                 <div className="admin-form" style={{ marginBottom: '2rem' }}>
@@ -979,7 +981,7 @@ const AdminDashboard = () => {
                             onZoomChange={setZoom}
                         />
                     </div>
-                    <div className="cropper-buttons">
+                    <div className="cropper-controls">
                         <input
                             type="range"
                             value={zoom}

@@ -90,13 +90,25 @@
 }
 
 .admin-header {
-    background: white;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     padding: 0.8rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
     z-index: 100;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 768px) {
+    .admin-header {
+        padding: 0.8rem 1rem;
+    }
+    .admin-header h2 {
+        font-size: 1.2rem;
+    }
 }
 
 .admin-nav {
@@ -106,6 +118,25 @@
     background: #fff;
     border-bottom: 1px solid #eaeaea;
     z-index: 100;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.admin-nav::-webkit-scrollbar {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .admin-nav {
+        padding: 0.5rem 1rem;
+        gap: 0.5rem;
+    }
+    .admin-nav-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+        white-space: nowrap;
+    }
 }
 
 .admin-nav-btn {
@@ -129,7 +160,7 @@
 .admin-nav-btn.active {
     color: var(--color-primary);
     border-bottom-color: var(--color-primary);
-    background: rgba(129, 1, 0, 0.08);
+    background: rgba(129, 1, 0, 0.05);
 }
 
 .admin-content {
@@ -140,8 +171,9 @@
 .admin-card {
     background: white;
     padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.02);
 }
 
 /* Split Layout */
@@ -152,6 +184,14 @@
     height: calc(100vh - 120px);
     overflow: hidden;
     background: #eaedf2;
+}
+
+@media (max-width: 768px) {
+    .admin-split-layout {
+        flex-direction: column;
+        height: auto;
+        overflow: visible;
+    }
 }
 
 .admin-config-panel {
@@ -166,6 +206,28 @@
     padding: 15px;
     overflow: hidden;
     flex: 1;
+}
+
+@media (max-width: 768px) {
+    .admin-config-panel,
+    .admin-preview-panel {
+        width: 100% !important;
+        min-width: 100%;
+        height: auto;
+    }
+
+    .admin-splitter {
+        display: none;
+    }
+    
+    .admin-preview-panel {
+        padding: 10px 0;
+        height: 600px; /* Give some height to preview on mobile */
+    }
+    
+    .preview-card {
+        border-radius: 0;
+    }
 }
 
 .admin-splitter {
@@ -204,7 +266,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
     background: white;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
@@ -249,6 +311,12 @@
     padding: 2rem;
 }
 
+@media (max-width: 768px) {
+    .cropper-modal {
+        padding: 1rem;
+    }
+}
+
 .cropper-container {
     position: relative;
     flex-grow: 1;
@@ -267,7 +335,14 @@
 
 .zoom-range {
     width: 300px;
+    max-width: 100%;
     accent-color: var(--color-accent);
+}
+
+@media (max-width: 480px) {
+    .zoom-range {
+        width: 100%;
+    }
 }
 
 .cropper-buttons {
@@ -280,10 +355,49 @@
     min-width: 120px;
 }
 
+@media (max-width: 480px) {
+    .cropper-buttons {
+        flex-direction: column;
+        width: 100%;
+        gap: 0.8rem;
+    }
+
+    .cropper-buttons .admin-btn {
+        width: 100%;
+        min-width: unset;
+    }
+}
+
 .cropper-buttons .admin-btn.cancel {
     background: #444;
 }
 
 .cropper-buttons .admin-btn.save {
     background: var(--color-primary);
+}
+
+/* Responsive Grid Utilities */
+.admin-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+@media (max-width: 768px) {
+    .admin-grid-2col {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+
+/* Table Responsiveness */
+@media (max-width: 768px) {
+    .admin-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    table {
+        min-width: 600px;
+    }
 }
