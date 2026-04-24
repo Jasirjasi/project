@@ -75,9 +75,12 @@
     margin-bottom: 1rem;
     color: #fff;
     text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    line-height: 1.1;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
+    line-height: 1.2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 100%;
 }
 
 .hero-divider {

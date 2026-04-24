@@ -23,6 +23,8 @@ const Gallery = () => {
     const containerRef = useRef(null);
     const itemsRef = useRef(null);
     const draggableRef = useRef(null);
+    const [activeTouchIndex, setActiveTouchIndex] = useState(null);
+    const touchStartPos = useRef({ x: 0, y: 0 });
 
     // Fetch dynamically uploaded images on mount
     useEffect(() => {
@@ -113,6 +115,32 @@ const Gallery = () => {
         } else {
             setImages(prev => [...prev, newImages]);
         }
+    };
+
+    const handleTouchStart = (e, index) => {
+        touchStartPos.current = { 
+            x: e.touches[0].clientX, 
+            y: e.touches[0].clientY 
+        };
+        setActiveTouchIndex(index);
+    };
+
+    const handleTouchEnd = (e, index) => {
+        const touchEnd = e.changedTouches[0];
+        const dx = Math.abs(touchEnd.clientX - touchStartPos.current.x);
+        const dy = Math.abs(touchEnd.clientY - touchStartPos.current.y);
+
+        // If movement is minimal, treat as a click/tap
+        if (dx < 10 && dy < 10) {
+            // Prevent double firing if onClick also exists
+            // but usually safe to just call openModal
+            openModal(index);
+        }
+        
+        // Reset active state after a short delay for visual feedback
+        setTimeout(() => {
+            setActiveTouchIndex(null);
+        }, 1500);
     };
 
     const openModal = (index) => {
@@ -211,13 +239,16 @@ const Gallery = () => {
                             {images.map((imgObj, index) => (
                                 <div
                                     key={imgObj.id || `rotational-${index}`}
-                                    className="gallery-item"
+                                    className={`gallery-item ${activeTouchIndex === index ? 'touch-active' : ''}`}
                                     onClick={() => openModal(index)}
+                                    onTouchStart={(e) => handleTouchStart(e, index)}
+                                    onTouchEnd={(e) => handleTouchEnd(e, index)}
                                 >
                                     <div className="item-inner">
                                         <button
                                             className="delete-image-btn"
                                             onClick={(e) => handleDelete(e, imgObj, index)}
+                                            onTouchEnd={(e) => e.stopPropagation()} // Prevent modal from opening when deleting
                                             title="Delete Photo"
                                         >
                                             <DeleteIcon fontSize="small" />
@@ -243,13 +274,16 @@ const Gallery = () => {
                         {images.map((imgObj, index) => (
                             <div
                                 key={imgObj.id || `grid-${index}`}
-                                className="gallery-item"
+                                className={`gallery-item ${activeTouchIndex === index ? 'touch-active' : ''}`}
                                 onClick={() => openModal(index)}
+                                onTouchStart={(e) => handleTouchStart(e, index)}
+                                onTouchEnd={(e) => handleTouchEnd(e, index)}
                             >
                                 <div className="item-inner">
                                     <button
                                         className="delete-image-btn"
                                         onClick={(e) => handleDelete(e, imgObj, index)}
+                                        onTouchEnd={(e) => e.stopPropagation()}
                                         title="Delete Photo"
                                     >
                                         <DeleteIcon fontSize="small" />

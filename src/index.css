@@ -68,6 +68,17 @@ button {
   border: none;
   outline: none;
   font-family: var(--font-body);
+  touch-action: manipulation;
+  transition: var(--transition-smooth);
+}
+
+button:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+html, body {
+  touch-action: manipulation;
 }
 
 img {

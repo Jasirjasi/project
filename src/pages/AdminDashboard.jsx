@@ -56,21 +56,30 @@ const AdminDashboard = () => {
     const [isDragging, setIsDragging] = useState(false);
 
     useEffect(() => {
-        const handleMouseMove = (e) => {
+        const handleMove = (clientX) => {
             if (!isDragging) return;
-            const newWidth = (e.clientX / window.innerWidth) * 100;
+            const newWidth = (clientX / window.innerWidth) * 100;
             if (newWidth > 20 && newWidth < 80) {
                 setSplitWidth(newWidth);
             }
         };
 
-        const handleMouseUp = () => {
+        const handleMouseMove = (e) => handleMove(e.clientX);
+        const handleTouchMove = (e) => {
+            if (e.touches.length > 0) {
+                handleMove(e.touches[0].clientX);
+            }
+        };
+
+        const handleEnd = () => {
             setIsDragging(false);
         };
 
         if (isDragging) {
             window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', handleMouseUp);
+            window.addEventListener('mouseup', handleEnd);
+            window.addEventListener('touchmove', handleTouchMove, { passive: false });
+            window.addEventListener('touchend', handleEnd);
             document.body.style.cursor = 'col-resize';
         } else {
             document.body.style.cursor = 'default';
@@ -78,7 +87,9 @@ const AdminDashboard = () => {
 
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
+            window.removeEventListener('mouseup', handleEnd);
+            window.removeEventListener('touchmove', handleTouchMove);
+            window.removeEventListener('touchend', handleEnd);
         };
     }, [isDragging]);
 
@@ -693,7 +704,11 @@ const AdminDashboard = () => {
                             </div>
                         </div>
 
-                        <div className="admin-splitter" onMouseDown={() => setIsDragging(true)}>
+                        <div 
+                            className="admin-splitter" 
+                            onMouseDown={() => setIsDragging(true)}
+                            onTouchStart={() => setIsDragging(true)}
+                        >
                             <div className="splitter-handle"></div>
                         </div>
 

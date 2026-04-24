@@ -44,13 +44,17 @@
     margin-right: 15px;
 }
 
-.swal2-custom-file-input::file-selector-button:hover {
-    background: var(--color-secondary);
+@media (hover: hover) {
+    .swal2-custom-file-input::file-selector-button:hover {
+        background: var(--color-secondary);
+    }
 }
 
-.swal2-custom-file-input:hover {
-    border-color: var(--color-secondary) !important;
-    background: var(--color-accent) !important;
+@media (hover: hover) {
+    .swal2-custom-file-input:hover {
+        border-color: var(--color-secondary) !important;
+        background: var(--color-accent) !important;
+    }
 }
 
 .swal2-custom-confirm-btn {
@@ -70,6 +74,8 @@
     font-family: var(--font-body), sans-serif !important;
 }
 
-.swal2-custom-cancel-btn:hover {
-    background: var(--color-accent) !important;
+@media (hover: hover) {
+    .swal2-custom-cancel-btn:hover {
+        background: var(--color-accent) !important;
+    }
 }

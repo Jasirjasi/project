@@ -14,9 +14,11 @@
     transition: var(--transition-smooth);
 }
 
-.detail-card:hover {
-    transform: translateY(-8px);
-    box-shadow: var(--shadow-md);
+@media (hover: hover) {
+    .detail-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-md);
+    }
 }
 
 .detail-card .icon {
@@ -60,9 +62,11 @@
     box-shadow: var(--shadow-soft);
 }
 
-.map-btn:hover {
-    background-color: var(--color-secondary);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-    color: white;
+@media (hover: hover) {
+    .map-btn:hover {
+        background-color: var(--color-secondary);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        color: white;
+    }
 }

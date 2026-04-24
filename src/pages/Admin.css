@@ -68,10 +68,12 @@
     box-shadow: 0 2px 4px rgba(129, 1, 0, 0.2);
 }
 
-.admin-btn:hover {
-    background: var(--color-secondary);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(129, 1, 0, 0.3);
+@media (hover: hover) {
+    .admin-btn:hover {
+        background: var(--color-secondary);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(129, 1, 0, 0.3);
+    }
 }
 
 .admin-btn:disabled {
@@ -117,9 +119,11 @@
     transition: all 0.2s;
 }
 
-.admin-nav-btn:hover {
-    color: var(--color-primary);
-    background: rgba(129, 1, 0, 0.05);
+@media (hover: hover) {
+    .admin-nav-btn:hover {
+        color: var(--color-primary);
+        background: rgba(129, 1, 0, 0.05);
+    }
 }
 
 .admin-nav-btn.active {
@@ -174,7 +178,12 @@
     z-index: 100;
 }
 
-.admin-splitter:hover,
+@media (hover: hover) {
+    .admin-splitter:hover {
+        background: var(--color-primary);
+    }
+}
+
 .admin-splitter:active {
     background: var(--color-primary);
 }

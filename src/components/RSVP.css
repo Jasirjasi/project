@@ -72,10 +72,12 @@
     cursor: pointer;
 }
 
-.submit-btn:hover {
-    background-color: var(--color-secondary);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+@media (hover: hover) {
+    .submit-btn:hover {
+        background-color: var(--color-secondary);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
 }
 
 .success-message {
