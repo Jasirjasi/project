@@ -243,14 +243,14 @@ const Gallery = () => {
                                     onTouchEnd={(e) => handleTouchEnd(e, index)}
                                 >
                                     <div className="item-inner">
-                                        <button
+                                       {  config.allowGuestUploads  && <button
                                             className="delete-image-btn"
                                             onClick={(e) => handleDelete(e, imgObj, index)}
                                             onTouchEnd={(e) => e.stopPropagation()} // Prevent modal from opening when deleting
                                             title="Delete Photo"
                                         >
                                             <DeleteIcon fontSize="small" />
-                                        </button>
+                                        </button> }
                                         <img src={imgObj.src} alt="Couple photo" loading="lazy" />
                                         <div className="gallery-overlay">
                                             <span>View</span>
@@ -278,14 +278,14 @@ const Gallery = () => {
                                 onTouchEnd={(e) => handleTouchEnd(e, index)}
                             >
                                 <div className="item-inner">
-                                    <button
+                                    {  config.allowGuestUploads  && <button
                                         className="delete-image-btn"
                                         onClick={(e) => handleDelete(e, imgObj, index)}
                                         onTouchEnd={(e) => e.stopPropagation()}
                                         title="Delete Photo"
                                     >
                                         <DeleteIcon fontSize="small" />
-                                    </button>
+                                    </button>}
                                     <img src={imgObj.src} alt="Couple photo" loading="lazy" />
                                     <div className="gallery-overlay">
                                         <span>View</span>

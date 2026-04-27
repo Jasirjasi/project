@@ -42,6 +42,7 @@ const config = {
         ceremony: {
             dayOfWeek: "Sunday",
             dateFull: "May 10, 2026",
+            muhurtham: "10:00 AM",
             calendarLink: "#", // Add your Google/Apple calendar link here
             timeStart: "10:00 AM",
             timeNotes: "Reception to follow"

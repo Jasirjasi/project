@@ -676,6 +676,10 @@ const AdminDashboard = () => {
                                             <input value={editConfig.details.ceremony.dateFull} onChange={(e) => handleNestedConfigChange(e, 'details', 'ceremony', 'dateFull')} />
                                         </div>
                                         <div className="form-group">
+                                            <label>Muhurtham</label>
+                                            <input value={editConfig.details.ceremony.muhurtham || ''} onChange={(e) => handleNestedConfigChange(e, 'details', 'ceremony', 'muhurtham')} placeholder="e.g. 10:00 AM" />
+                                        </div>
+                                        <div className="form-group">
                                             <label>Time Start</label>
                                             <input value={editConfig.details.ceremony.timeStart} onChange={(e) => handleNestedConfigChange(e, 'details', 'ceremony', 'timeStart')} />
                                         </div>

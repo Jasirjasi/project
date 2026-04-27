@@ -22,7 +22,15 @@ const Details = () => {
                     <h3>The Date</h3>
                     <p>{config.details.ceremony.dayOfWeek}</p>
                     <p className="highlight">{config.details.ceremony.dateFull}</p>
-                    <a href={config.details.ceremony.calendarLink} className="calendar-link">Add to Calendar</a>
+                    <p className="muhurtham">Muhurtham: {config.details.ceremony.muhurtham || config.details.ceremony.timeStart}</p>
+                    <a 
+                        href={`https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent("Wedding of " + config.couple.namesFormatted)}&dates=20260510T100000/20260510T140000&details=${encodeURIComponent("Wedding Ceremony of " + config.couple.namesFormatted)}&location=${encodeURIComponent(config.details.venue.name + ", " + config.details.venue.address)}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="calendar-link"
+                    >
+                        Add to Calendar
+                    </a>
                 </div>
 
                 <div className="detail-card">
