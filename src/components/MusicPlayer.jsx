@@ -4,6 +4,7 @@ import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MandalaDecoration } from './TraditionalDecorations';
+import ParticlesBackground from './ParticlesBackground';
 import './MusicPlayer.css';
 
 const MusicPlayer = () => {
@@ -84,7 +85,7 @@ const MusicPlayer = () => {
         <>
             <AnimatePresence>
                 {showWelcome && (
-                    <motion.div 
+                    <motion.div
                         className="welcome-overlay"
                         variants={containerVariants}
                         initial="hidden"
@@ -92,47 +93,63 @@ const MusicPlayer = () => {
                         exit="exit"
                     >
                         {/* Dynamic Background Elements */}
+                        <ParticlesBackground show={true} />
                         <div className="welcome-bg-ornaments">
                             <MandalaDecoration className="welcome-mandala m-1" />
                             <MandalaDecoration className="welcome-mandala m-2" />
                         </div>
-                        
+
                         <div className="welcome-glass-card">
                             <motion.div variants={itemVariants} className="welcome-header">
                                 <span className="welcome-label">Welcome to the Wedding of</span>
                             </motion.div>
-                            
+
                             <motion.h2 variants={itemVariants} className="welcome-names">
                                 {config.couple?.namesFormatted}
                             </motion.h2>
-                            
+
                             <motion.div variants={itemVariants} className="welcome-divider">
                                 <span className="line"></span>
                                 <span className="dot"></span>
                                 <span className="line"></span>
                             </motion.div>
-                            
+
                             <motion.p variants={itemVariants} className="welcome-text">
                                 Your presence would mean the world to us.
                             </motion.p>
-                            
-                            <motion.button 
+
+                            <motion.button
                                 variants={itemVariants}
-                                className="enter-site-btn" 
+                                className="enter-site-btn"
                                 onClick={startMusic}
-                                whileHover={{ scale: 1.05 }}
+                                whileHover={{ 
+                                    scale: 1.08,
+                                    letterSpacing: "5px",
+                                    boxShadow: "0 25px 60px rgba(0, 0, 0, 0.6), 0 0 0 15px rgba(237, 235, 221, 0.15)"
+                                }}
                                 whileTap={{ scale: 0.95 }}
+                                animate={{
+                                    y: [0, -8, 0],
+                                }}
+                                transition={{
+                                    y: {
+                                        duration: 4,
+                                        repeat: Infinity,
+                                        ease: "easeInOut"
+                                    },
+                                    scale: { type: "spring", stiffness: 400, damping: 10 }
+                                }}
                             >
+                                <div className="btn-shine"></div>
                                 <span className="btn-text">Open Invitation</span>
-                                <div className="btn-glow"></div>
                             </motion.button>
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            <motion.div 
-                className={`music-player-toggle ${isMuted ? 'muted' : 'playing'}`} 
+            <motion.div
+                className={`music-player-toggle ${isMuted ? 'muted' : 'playing'}`}
                 onClick={toggleMute}
                 initial={{ x: -100, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
@@ -140,7 +157,7 @@ const MusicPlayer = () => {
             >
                 {!isMuted && (
                     <div className="music-bars">
-                        {[1,2,3,4].map(i => <span key={i}></span>)}
+                        {[1, 2, 3, 4].map(i => <span key={i}></span>)}
                     </div>
                 )}
                 <div className="icon-wrapper">
