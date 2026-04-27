@@ -76,11 +76,12 @@ const ParticleBackground3D = () => {
 
         return () => {
             window.removeEventListener('resize', handleResize);
-            if (containerRef.current) {
+            if (containerRef.current && renderer && renderer.domElement.parentNode === containerRef.current) {
                 containerRef.current.removeChild(renderer.domElement);
             }
-            geometry.dispose();
-            material.dispose();
+            if (geometry) geometry.dispose();
+            if (material) material.dispose();
+            if (renderer) renderer.dispose();
         };
     }, []);
 
