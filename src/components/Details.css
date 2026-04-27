@@ -24,6 +24,48 @@
 .detail-card .icon {
     font-size: 2.5rem;
     margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: center;
+}
+
+.calendar-date {
+    background: white;
+    width: 65px;
+    height: 70px;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border: 1px solid #eee;
+    transition: transform 0.3s ease;
+}
+
+.calendar-date .month {
+    background: var(--color-primary);
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 4px 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.calendar-date .day {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--color-text);
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 2px;
+}
+
+@media (hover: hover) {
+    .detail-card:hover .calendar-date {
+        transform: scale(1.1) rotate(-5deg);
+    }
 }
 
 .detail-card h3 {

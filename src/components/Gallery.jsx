@@ -28,7 +28,6 @@ const Gallery = () => {
 
     // Fetch dynamically uploaded images on mount
     useEffect(() => {
-        if (config.allowGuestUploads) {
             const fetchImages = async () => {
                 try {
                     const { data, error } = await supabase
@@ -49,7 +48,6 @@ const Gallery = () => {
                 }
             };
             fetchImages();
-        }
     }, [config.allowGuestUploads, config.images]);
 
     // GSAP Rotational Logic

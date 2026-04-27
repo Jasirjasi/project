@@ -3,13 +3,22 @@ import { useConfig } from '../context/ConfigContext';
 
 const Details = () => {
     const { config } = useConfig();
+    const dateStr = config.details.ceremony.dateFull || "May 10, 2026";
+    const month = dateStr.split(' ')[0].substring(0, 3).toUpperCase();
+    const day = dateStr.match(/\d+/)[0];
+
     return (
         <section className="details section-container" id="details">
             <h2 className="section-title">When & Where</h2>
 
             <div className="details-grid">
                 <div className="detail-card">
-                    <div className="icon">📅</div>
+                    <div className="icon">
+                        <div className="calendar-date">
+                            <span className="month">{month}</span>
+                            <span className="day">{day}</span>
+                        </div>
+                    </div>
                     <h3>The Date</h3>
                     <p>{config.details.ceremony.dayOfWeek}</p>
                     <p className="highlight">{config.details.ceremony.dateFull}</p>
