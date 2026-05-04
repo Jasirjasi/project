@@ -1,14 +1,30 @@
+import React, { useState, useEffect } from 'react';
 import './Hero.css';
 import { useConfig } from '../context/ConfigContext';
 import BlurText from './animations/BlurText';
 import ParticlesBackground from './ParticlesBackground';
 import { CornerDecoration } from './TraditionalDecorations';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Hero = ({ isPreview = false }) => {
     const { config } = useConfig();
     const bgType = config.hero?.backgroundType || 'image';
     const bgUrl = config.hero?.backgroundImage || '';
+    
+    const [showScrollHint, setShowScrollHint] = useState(true);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.scrollY > 150) {
+                setShowScrollHint(false);
+            } else {
+                setShowScrollHint(true);
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     return (
         <section className="hero" id="home">
@@ -69,18 +85,23 @@ const Hero = ({ isPreview = false }) => {
                 <p className="hero-location" style={config.hero.locationStyle || {}}>{config.hero.locationText}</p>
             </motion.div>
 
-            <motion.div
-                className="scroll-indicator"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 2, duration: 1 }}
-                onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
-            >
-                <div className="mouse">
-                    <div className="wheel"></div>
-                </div>
-                <span className="scroll-text">Scroll</span>
-            </motion.div>
+            <AnimatePresence>
+                {showScrollHint && (
+                    <motion.div
+                        className="scroll-indicator"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        transition={{ duration: 0.5 }}
+                        onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
+                    >
+                        <div className="mouse">
+                            <div className="wheel"></div>
+                        </div>
+                        <span className="scroll-text">Scroll</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </section>
     );
 };
