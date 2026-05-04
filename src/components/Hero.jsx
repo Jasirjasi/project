@@ -25,7 +25,7 @@ const Hero = ({ isPreview = false }) => {
                     Your browser does not support the video tag.
                 </video>
             ) : (
-                <div 
+                <div
                     className={`hero-image-bg ${config.hero?.useKenBurns !== false ? 'ken-burns' : ''}`}
                     style={{
                         backgroundImage: `url('${bgUrl}')`,
@@ -33,9 +33,9 @@ const Hero = ({ isPreview = false }) => {
                     }}
                 ></div>
             )}
-            
+
             <div className="hero-overlay" style={{ backgroundColor: config.hero?.overlayColor || 'var(--color-overlay)' }}></div>
-            
+
             <ParticlesBackground show={config.hero?.showParticles !== false} />
 
             {config.theme?.traditionalMode && (
@@ -67,6 +67,19 @@ const Hero = ({ isPreview = false }) => {
                     {config.hero.dateText} {config.hero.timeText && <span style={config.hero.timeStyle || {}}>{config.hero.timeText}</span>}
                 </p>
                 <p className="hero-location" style={config.hero.locationStyle || {}}>{config.hero.locationText}</p>
+            </motion.div>
+
+            <motion.div
+                className="scroll-indicator"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 2, duration: 1 }}
+                onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
+            >
+                <div className="mouse">
+                    <div className="wheel"></div>
+                </div>
+                <span className="scroll-text">Scroll</span>
             </motion.div>
         </section>
     );
