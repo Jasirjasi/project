@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 gsap.registerPlugin(Draggable);
 
-const Gallery = () => {
+const Gallery = ({ isAdmin = false }) => {
     const { config } = useConfig();
     const [modalOpen, setModalOpen] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -216,7 +216,7 @@ const Gallery = () => {
                     </button>
                 </div>
                 
-                {config.allowGuestUploads && (
+                {(config.allowGuestUploads || isAdmin) && (
                     <button className="upload-trigger-btn" onClick={() => setUploadModalOpen(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                         <PhotoCameraIcon fontSize="small" /> Upload Photo
                     </button>
@@ -243,7 +243,7 @@ const Gallery = () => {
                                     onTouchEnd={(e) => handleTouchEnd(e, index)}
                                 >
                                     <div className="item-inner">
-                                       {  config.allowGuestUploads  && <button
+                                       { (config.allowGuestUploads || isAdmin) && <button
                                             className="delete-image-btn"
                                             onClick={(e) => handleDelete(e, imgObj, index)}
                                             onTouchEnd={(e) => e.stopPropagation()} // Prevent modal from opening when deleting
@@ -278,7 +278,7 @@ const Gallery = () => {
                                 onTouchEnd={(e) => handleTouchEnd(e, index)}
                             >
                                 <div className="item-inner">
-                                    {  config.allowGuestUploads  && <button
+                                    { (config.allowGuestUploads || isAdmin) && <button
                                         className="delete-image-btn"
                                         onClick={(e) => handleDelete(e, imgObj, index)}
                                         onTouchEnd={(e) => e.stopPropagation()}

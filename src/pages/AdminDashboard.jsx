@@ -966,7 +966,7 @@ const AdminDashboard = () => {
                         <h3 style={{ marginBottom: '0.5rem' }}>Gallery Manager</h3>
                         <p style={{ marginBottom: '2rem', color: '#666' }}>You can delete guest-uploaded images below. Deleting an image will permanently remove it from Firestore.</p>
                         <div style={{ background: 'white', padding: '1rem', borderRadius: '8px' }}>
-                            <Gallery />
+                            <Gallery isAdmin={true} />
                         </div>
                     </div>
                 )}
