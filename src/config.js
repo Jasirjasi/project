@@ -3,7 +3,7 @@
 const config = {
     // Couple Info
     couple: {
-        name1: "adithi",
+        name1: "Adithi",
         name2: "Rajkiran",
         namesFormatted: "Adithi  & Rajkiran",
         namesFormattedStyle: {}
@@ -43,7 +43,7 @@ const config = {
             dayOfWeek: "Sunday",
             dateFull: "May 10, 2026",
             muhurtham: "10:00 AM",
-            calendarLink: "#", // Add your Google/Apple calendar link here
+            calendarLink: "#",
             timeStart: "10:00 AM",
             timeNotes: "Reception to follow"
         },
@@ -56,7 +56,7 @@ const config = {
 
     // Countdown Timer
     // Format: YYYY-MM-DDTHH:mm:ss
-    countdownTarget: "2026-09-24T16:00:00",
+    countdownTarget: "2026-05-10T10:00:00",
 
     // Photo Gallery Features
     allowGuestUploads: true,
@@ -64,12 +64,12 @@ const config = {
 
     // Photo Gallery Images
     images: [
-        // 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        // 'https://images.unsplash.com/photo-1606800052052-a08af7148866?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        // 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        // 'https://images.unsplash.com/photo-1544078751-58fee218a096?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        // 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        // 'https://images.unsplash.com/photo-1520854221256-17451cc331bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+        'https://images.unsplash.com/photo-1583939003579-730e3918a45a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1606800052052-a08af7148866?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1544078751-58fee218a096?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1520854221256-17451cc331bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
     ],
     // RSVP Section
     rsvp: {

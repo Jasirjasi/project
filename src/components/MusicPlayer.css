@@ -36,7 +36,7 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: linear-gradient(135deg, #1B1717 0%, #630000 100%);
+    background: linear-gradient(135deg, var(--color-text, #1B1717) 0%, var(--color-primary, #810100) 100%);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -57,35 +57,35 @@
     position: relative;
     z-index: 10;
     text-align: center;
-    padding: 5rem 3rem;
+    padding: clamp(2rem, 6vw, 4.5rem) clamp(1.2rem, 5vw, 3rem);
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(30px) saturate(120%);
     -webkit-backdrop-filter: blur(30px) saturate(120%);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 50px;
+    border-radius: clamp(24px, 5vw, 50px);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7),
         inset 0 1px 1px 0 rgba(255, 255, 255, 0.1);
     max-width: 650px;
-    width: 90%;
+    width: 92%;
 }
 
 .welcome-label {
     font-family: var(--font-body);
     text-transform: uppercase;
-    letter-spacing: 5px;
-    font-size: 0.75rem;
+    letter-spacing: 3px;
+    font-size: clamp(0.65rem, 2vw, 0.75rem);
     color: var(--color-accent);
     opacity: 0.6;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     display: block;
 }
 
 .welcome-names {
     font-family: var(--font-heading);
-    font-size: 5rem;
+    font-size: clamp(2.2rem, 8vw, 5rem);
     color: var(--color-accent);
-    margin-bottom: 2rem;
-    line-height: 1;
+    margin-bottom: 1.5rem;
+    line-height: 1.1;
     text-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
     letter-spacing: -1px;
 }
@@ -94,13 +94,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 2rem;
-    margin-bottom: 2.5rem;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 .welcome-divider .line {
     height: 1px;
-    width: 80px;
+    width: clamp(40px, 15vw, 80px);
     background: linear-gradient(to right, transparent, rgba(237, 235, 221, 0.5), transparent);
 }
 
@@ -116,8 +116,8 @@
     font-family: var(--font-body);
     color: var(--color-accent);
     opacity: 0.8;
-    margin-bottom: 4rem;
-    font-size: 1.3rem;
+    margin-bottom: 2.5rem;
+    font-size: clamp(0.95rem, 3vw, 1.25rem);
     font-weight: 300;
     letter-spacing: 0.5px;
 }
@@ -127,14 +127,15 @@
     background: rgba(237, 235, 221, 0.95);
     color: #1B1717;
     border: none;
-    padding: 1.6rem 4rem;
+    padding: clamp(1rem, 4vw, 1.5rem) clamp(1.8rem, 6vw, 3.5rem);
     border-radius: var(--radius-full);
-    font-size: 1rem;
+    font-size: clamp(0.85rem, 2.5vw, 1rem);
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 3px;
+    letter-spacing: 2px;
     cursor: pointer;
     overflow: hidden;
+    max-width: 100%;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4),
                 0 0 0 8px rgba(237, 235, 221, 0.05);
     transition: background 0.3s ease, letter-spacing 0.3s ease;

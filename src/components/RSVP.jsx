@@ -5,7 +5,7 @@ import { useConfig } from '../context/ConfigContext';
 import BlurText from './animations/BlurText';
 
 const RSVP = () => {
-    const { config } = useConfig();
+    const { config, clientSlug } = useConfig();
     const [formData, setFormData] = useState({
         name: '',
         guests: '1',
@@ -28,7 +28,7 @@ const RSVP = () => {
         try {
             const { error: insertError } = await supabase
                 .from('reservations')
-                .insert([formData]);
+                .insert([{ ...formData, client_id: clientSlug || 'main' }]);
 
             if (insertError) throw insertError;
             setIsSubmitted(true);

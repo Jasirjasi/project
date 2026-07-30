@@ -87,20 +87,26 @@ img {
 }
 
 .section-container {
-  padding: 5rem 2rem;
+  padding: 4rem 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
 }
 
+@media (max-width: 768px) {
+  .section-container {
+    padding: 2.5rem 1rem;
+  }
+}
+
 .section-title {
   text-align: center;
-  font-size: 2.5rem;
-  margin-bottom: 3rem;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  margin-bottom: 2.5rem;
   position: relative;
-
 }
 .countdown-section .section-title {
-  color: var(--color-surface) !important;}
+  color: var(--color-surface) !important;
+}
 
 .section-title::after {
   content: '';

@@ -13,10 +13,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 gsap.registerPlugin(Draggable);
 
 const Gallery = ({ isAdmin = false }) => {
-    const { config } = useConfig();
+    const { config, clientSlug } = useConfig();
     const [modalOpen, setModalOpen] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [images, setImages] = useState(() => config.images.map(src => ({ id: null, src })));
+    const [images, setImages] = useState(() => (config?.images || []).map(src => ({ id: null, src })));
     const [uploadModalOpen, setUploadModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState('rotational'); // 'rotational' or 'grid'
     
@@ -28,27 +28,63 @@ const Gallery = ({ isAdmin = false }) => {
 
     // Fetch dynamically uploaded images on mount
     useEffect(() => {
-            const fetchImages = async () => {
-                try {
-                    const { data, error } = await supabase
+        const fetchImages = async () => {
+            try {
+                let data = null;
+                let error = null;
+                const activeClientId = (!clientSlug || clientSlug === 'main') ? 'adithi-rajkiran' : clientSlug;
+
+                if (activeClientId === 'adithi-rajkiran') {
+                    const res = await supabase
+                        .from('images')
+                        .select('*')
+                        .or('client_id.eq.adithi-rajkiran,client_id.eq.main,client_id.is.null')
+                        .order('created_at', { ascending: false });
+                    data = res.data;
+                    error = res.error;
+                } else {
+                    const res = await supabase
+                        .from('images')
+                        .select('*')
+                        .eq('client_id', activeClientId)
+                        .order('created_at', { ascending: false });
+                    data = res.data;
+                    error = res.error;
+                }
+
+                // Fallback if client_id column does not exist in DB schema yet (PGRST204 or 42703)
+                if (error && (error.code === 'PGRST204' || error.code === '42703' || error.message?.includes('client_id') || error.message?.includes('does not exist'))) {
+                    console.warn("Table 'images' missing 'client_id' column, falling back to simple select.");
+                    const fallbackRes = await supabase
                         .from('images')
                         .select('*')
                         .order('created_at', { ascending: false });
-
-                    if (error) throw error;
-                    const loadedImages = data.map(img => ({
-                        id: img.id,
-                        src: img.url
-                    }));
-
-                    const configImgs = config.images.map(src => ({ id: null, src }));
-                    setImages([...configImgs, ...loadedImages]);
-                } catch (err) {
-                    console.error("Error fetching images from supabase", err);
+                    data = fallbackRes.data;
+                    error = fallbackRes.error;
                 }
-            };
-            fetchImages();
-    }, [config.allowGuestUploads, config.images]);
+
+                if (error) throw error;
+
+                let filtered = data || [];
+                if (activeClientId === 'adithi-rajkiran') {
+                    filtered = filtered.filter(img => !img.client_id || img.client_id === 'adithi-rajkiran' || img.client_id === 'main');
+                } else {
+                    filtered = filtered.filter(img => img.client_id === activeClientId);
+                }
+
+                const loadedImages = filtered.map(img => ({
+                    id: img.id,
+                    src: img.url
+                }));
+
+                const configImgs = (config?.images || []).map(src => ({ id: null, src }));
+                setImages([...configImgs, ...loadedImages]);
+            } catch (err) {
+                console.error("Error fetching images from supabase", err);
+            }
+        };
+        fetchImages();
+    }, [config?.allowGuestUploads, config?.images, clientSlug]);
 
     // GSAP Rotational Logic
     useEffect(() => {

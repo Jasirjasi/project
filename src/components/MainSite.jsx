@@ -38,14 +38,19 @@ const MainSite = ({ isPreview = false }) => {
                         `).join('\n')}
 
                         :root {
-                            --color-primary: ${config.theme.primaryColor};
-                            --color-text: ${config.theme.textColor};
-                            --font-heading: '${config.theme.headingFont}', serif;
-                            --font-body: '${config.theme.bodyFont}', sans-serif;
-                            --font-accent: '${config.theme.accentFont}', cursive;
+                            --color-primary: ${config.theme.primaryColor || '#810100'};
+                            --color-secondary: ${config.theme.secondaryColor || '#630000'};
+                            --color-accent: ${config.theme.accentColor || '#EDEBDD'};
+                            --color-background: ${config.theme.backgroundColor || '#EDEBDD'};
+                            --color-text: ${config.theme.textColor || '#1B1717'};
+                            --font-heading: '${config.theme.headingFont || 'Cormorant Infant'}', serif;
+                            --font-body: '${config.theme.bodyFont || 'Inter'}', sans-serif;
+                            --font-accent: '${config.theme.accentFont || 'Great Vibes'}', cursive;
                         }
                         body {
-                            font-size: ${config.theme.baseFontSize};
+                            font-size: ${config.theme.baseFontSize || '16px'};
+                            background-color: ${config.theme.backgroundColor || '#EDEBDD'};
+                            color: ${config.theme.textColor || '#1B1717'};
                         }
                     `}
                 </style>

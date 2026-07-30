@@ -1,0 +1,59 @@
+{
+    "couple": {
+        "name1": "Partner 1",
+        "name2": "Partner 2",
+        "namesFormatted": "Partner 1 & Partner 2",
+        "namesFormattedStyle": {}
+    },
+    "theme": {
+        "primaryColor": "#810100",
+        "secondaryColor": "#630000",
+        "accentColor": "#EDEBDD",
+        "backgroundColor": "#EDEBDD",
+        "textColor": "#1B1717",
+        "headingFont": "Cormorant Infant",
+        "bodyFont": "Inter",
+        "accentFont": "Great Vibes",
+        "baseFontSize": "16px",
+        "customFonts": [],
+        "showParticles": true,
+        "traditionalMode": true
+    },
+    "hero": {
+        "subtitle": "We are getting married",
+        "subtitleStyle": {},
+        "dateText": "December 31, 2026",
+        "dateStyle": {},
+        "timeText": "10:00 AM",
+        "timeStyle": {},
+        "locationText": "Sample Grand Venue, City, Country",
+        "locationStyle": {},
+        "backgroundImage": "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+        "backgroundPosition": "center",
+        "overlayColor": "rgba(27, 23, 23, 0.6)"
+    },
+    "details": {
+        "ceremony": {
+            "dayOfWeek": "Sunday",
+            "dateFull": "December 31, 2026",
+            "muhurtham": "10:00 AM",
+            "calendarLink": "#",
+            "timeStart": "10:00 AM",
+            "timeNotes": "Reception to follow"
+        },
+        "venue": {
+            "name": "Sample Grand Venue",
+            "address": "City, Country",
+            "mapUrl": "#"
+        }
+    },
+    "countdownTarget": "2026-12-31T10:00:00",
+    "allowGuestUploads": true,
+    "images": [],
+    "rsvp": {
+        "deadline": "December 1st, 2026"
+    },
+    "music": {
+        "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    }
+}

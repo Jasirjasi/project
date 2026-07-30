@@ -401,3 +401,789 @@
         min-width: 600px;
     }
 }
+
+/* ==========================================================================
+   ADMINLTE DESIGN SYSTEM & CLIENT CARDS DASHBOARD STYLES
+   ========================================================================== */
+
+/* Login Brand Header */
+.admin-login-brand {
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.admin-brand-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #3c8dbc, #222d32);
+    color: #ffffff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 12px rgba(60, 141, 188, 0.3);
+}
+
+.admin-login-subtitle {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 0.3rem;
+}
+
+/* AdminLTE Main Shell */
+.adminlte-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f4f6f9;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #212529;
+}
+
+/* AdminLTE Top Navbar */
+.adminlte-navbar {
+    min-height: 60px;
+    height: auto;
+    background-color: #ffffff;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1.25rem;
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.adminlte-navbar-left,
+.adminlte-navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 576px) {
+    .adminlte-navbar {
+        padding: 0.5rem 0.8rem;
+    }
+    
+    .adminlte-brand-title {
+        font-size: 0.95rem;
+    }
+
+    .adminlte-brand-badge {
+        display: none;
+    }
+    
+    .adminlte-navbar-right {
+        gap: 0.35rem;
+    }
+}
+
+.adminlte-sidebar-toggle {
+    background: transparent;
+    border: none;
+    color: #495057;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.4rem 0.6rem;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.adminlte-sidebar-toggle:hover {
+    background: #f1f3f5;
+    color: #212529;
+}
+
+.adminlte-brand-title {
+    font-size: clamp(0.95rem, 3vw, 1.15rem);
+    font-weight: 700;
+    color: #222d32;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.adminlte-brand-badge {
+    background: #3c8dbc;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* AdminLTE Layout Body (Sidebar + Content) */
+.adminlte-layout-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+/* AdminLTE Left Sidebar */
+.adminlte-sidebar {
+    width: 260px;
+    background-color: #222d32;
+    color: #b8c7ce;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.25s ease-in-out, transform 0.25s ease-in-out;
+    z-index: 1020;
+    flex-shrink: 0;
+}
+
+.adminlte-sidebar.collapsed {
+    width: 0;
+    overflow: hidden;
+    transform: translateX(-100%);
+}
+
+/* Mobile Sidebar Backdrop */
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1010;
+    backdrop-filter: blur(2px);
+}
+
+@media (max-width: 992px) {
+    .adminlte-sidebar {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        height: 100%;
+        box-shadow: 4px 0 12px rgba(0,0,0,0.2);
+    }
+    
+    .sidebar-backdrop.active {
+        display: block;
+    }
+}
+
+/* Sidebar Client Profile Widget */
+.sidebar-client-profile {
+    padding: 1.25rem 1rem;
+    border-bottom: 1px solid #1a2226;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background: #1e282c;
+}
+
+.client-avatar-thumb {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #3c8dbc;
+    background: #3c8dbc;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.sidebar-client-info {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-client-name {
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-client-slug {
+    font-size: 0.75rem;
+    color: #8aa4af;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.status-dot-online {
+    width: 8px;
+    height: 8px;
+    background-color: #00a65a;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* Sidebar Search */
+.sidebar-search-box {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid #1a2226;
+}
+
+.sidebar-search-box input {
+    width: 100%;
+    background: #374850;
+    border: 1px solid #374850;
+    color: #fff;
+    padding: 0.5rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.sidebar-search-box input::placeholder {
+    color: #8aa4af;
+}
+
+/* Sidebar Navigation Menu */
+.sidebar-nav-menu {
+    list-style: none;
+    padding: 0.8rem 0;
+    margin: 0;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.sidebar-menu-header {
+    padding: 0.6rem 1.25rem 0.3rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #4b646f;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.sidebar-menu-item {
+    margin-bottom: 2px;
+}
+
+.sidebar-menu-link {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1.25rem;
+    color: #b8c7ce;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+    cursor: pointer;
+    background: transparent;
+    border-top: none;
+    border-right: none;
+    border-bottom: none;
+    width: 100%;
+    text-align: left;
+}
+
+.sidebar-menu-link:hover {
+    color: #ffffff;
+    background-color: #1e282c;
+    border-left-color: #3c8dbc;
+}
+
+.sidebar-menu-link.active {
+    color: #ffffff;
+    background-color: #1e282c;
+    border-left-color: #3c8dbc;
+    font-weight: 600;
+}
+
+.sidebar-menu-icon {
+    margin-right: 0.75rem;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+}
+
+.sidebar-menu-badge {
+    margin-left: auto;
+    background: #00a65a;
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+/* AdminLTE Main Content Wrapper */
+.adminlte-content-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background-color: #f4f6f9;
+}
+
+/* Page Header & Breadcrumbs */
+.adminlte-content-header {
+    padding: 1.25rem 1.5rem 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.adminlte-page-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #212529;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.adminlte-breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #6c757d;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.adminlte-breadcrumbs a {
+    color: #3c8dbc;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.adminlte-breadcrumbs a:hover {
+    text-decoration: underline;
+}
+
+/* Content Body Container */
+.adminlte-content-body {
+    padding: 1.25rem 1.5rem;
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    .adminlte-content-header {
+        padding: 0.8rem 1rem 0.4rem;
+    }
+    
+    .adminlte-content-body {
+        padding: 0.8rem 1rem;
+    }
+    
+    .adminlte-page-title {
+        font-size: 1.2rem;
+    }
+}
+
+/* Metric Info Boxes (AdminLTE Style) */
+.info-box-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 576px) {
+    .info-box-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .info-box {
+        min-height: 70px;
+    }
+    
+    .info-box-icon {
+        width: 50px;
+        font-size: 1.3rem;
+    }
+    
+    .info-box-content {
+        padding: 0.5rem 0.6rem;
+    }
+    
+    .info-box-text {
+        font-size: 0.7rem;
+    }
+    
+    .info-box-number {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 380px) {
+    .info-box-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.info-box {
+    display: flex;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    border: 1px solid #e9ecef;
+    overflow: hidden;
+    min-height: 85px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.info-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.info-box-icon {
+    width: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 1.8rem;
+    flex-shrink: 0;
+}
+
+.bg-info-blue { background-color: #3c8dbc; }
+.bg-info-green { background-color: #00a65a; }
+.bg-info-warning { background-color: #f39c12; }
+.bg-info-danger { background-color: #dd4b39; }
+
+.info-box-content {
+    padding: 0.8rem 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+}
+
+.info-box-text {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: #6c757d;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.info-box-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #212529;
+}
+
+/* Client Cards Grid Section */
+.client-overview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.client-search-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background: #ffffff;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    width: 100%;
+    max-width: 380px;
+}
+
+@media (max-width: 768px) {
+    .client-search-filter {
+        max-width: 100%;
+    }
+}
+
+.client-search-filter input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+.client-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 480px) {
+    .client-cards-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Individual Client Card */
+.client-card {
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.04);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.client-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.client-card-cover {
+    height: 120px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    background-color: #222d32;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 0.8rem;
+}
+
+.client-card-cover-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.75) 100%);
+}
+
+.client-card-slug-badge {
+    position: relative;
+    z-index: 2;
+    background: rgba(255,255,255,0.9);
+    color: #222d32;
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 20px;
+    backdrop-filter: blur(4px);
+}
+
+.client-card-status-pill {
+    position: relative;
+    z-index: 2;
+    background: #00a65a;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 12px;
+    text-transform: uppercase;
+}
+
+.client-card-title-box {
+    position: relative;
+    z-index: 2;
+    margin-top: auto;
+    color: #ffffff;
+}
+
+.client-card-names {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.client-card-body {
+    padding: 1.25rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.client-info-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #6c757d;
+    border-bottom: 1px dashed #e9ecef;
+    padding-bottom: 0.5rem;
+}
+
+.client-info-row strong {
+    color: #212529;
+}
+
+.client-card-actions {
+    padding: 1rem 1.25rem;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-card-action {
+    flex: 1;
+    padding: 0.6rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-card-config {
+    background: #3c8dbc;
+    color: #ffffff;
+}
+
+.btn-card-config:hover {
+    background: #367fa9;
+}
+
+.btn-card-view {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.btn-card-view:hover {
+    background: #dee2e6;
+}
+
+.btn-card-delete {
+    width: 36px;
+    flex: none;
+    background: #fff;
+    border: 1px solid #f5c6cb;
+    color: #dc3545;
+}
+
+.btn-card-delete:hover {
+    background: #f8d7da;
+}
+
+/* Add New Client Card */
+.client-card-add {
+    background: #ffffff;
+    border: 2px dashed #ced4da;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 260px;
+    text-align: center;
+}
+
+.client-card-add:hover {
+    border-color: #3c8dbc;
+    background: rgba(60, 141, 188, 0.03);
+    transform: translateY(-2px);
+}
+
+.add-client-icon-circle {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: #e7f3f9;
+    color: #3c8dbc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+/* AdminLTE Card Box Containers */
+.card-adminlte {
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    border-top: 3px solid #3c8dbc;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    margin-bottom: 1.5rem;
+}
+
+.card-adminlte.card-success { border-top-color: #00a65a; }
+.card-adminlte.card-warning { border-top-color: #f39c12; }
+.card-adminlte.card-danger { border-top-color: #dd4b39; }
+
+.card-header-adminlte {
+    padding: 0.9rem 1.25rem;
+    background-color: transparent;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-title-adminlte {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+    color: #212529;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.card-tools-adminlte {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.card-body-adminlte {
+    padding: 1.25rem;
+}
+
+/* Save Action Floating Footer */
+.floating-save-bar {
+    position: sticky;
+    bottom: 0;
+    background: #ffffff;
+    border-top: 1px solid #dee2e6;
+    padding: 0.8rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    z-index: 100;
+}
