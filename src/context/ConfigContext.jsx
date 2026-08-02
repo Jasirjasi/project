@@ -70,7 +70,7 @@ const fetchLocalConfig = async (slug) => {
                     .from('settings')
                     .select('config')
                     .eq('id', clientSlug)
-                    .single();
+                    .maybeSingle();
 
                 if (data && data.config) {
                     setConfig(data.config);

@@ -1,0 +1,61 @@
+{
+  "couple": {
+    "name1": "Ameen",
+    "name2": "Raihana",
+    "namesFormatted": "Ameen & Raihana",
+    "namesFormattedStyle": {}
+  },
+  "theme": {
+    "primaryColor": "#810100",
+    "secondaryColor": "#630000",
+    "accentColor": "#EDEBDD",
+    "backgroundColor": "#EDEBDD",
+    "textColor": "#1B1717",
+    "headingFont": "Cormorant Infant",
+    "bodyFont": "Inter",
+    "accentFont": "Great Vibes",
+    "baseFontSize": "16px",
+    "customFonts": [],
+    "showParticles": true,
+    "traditionalMode": true
+  },
+  "hero": {
+    "subtitle": "We are getting married",
+    "subtitleStyle": {},
+    "dateText": "August 27, 2026",
+    "dateStyle": {},
+    "timeText": "11:00 AM",
+    "timeStyle": {},
+    "locationText": "Bhavana Auditorium, Chempoor Venjarammoodu, Kerala",
+    "locationStyle": {},
+    "backgroundImage": "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+    "backgroundPosition": "center",
+    "overlayColor": "rgba(27, 23, 23, 0.6)",
+    "backgroundType": "image"
+  },
+  "details": {
+    "ceremony": {
+      "dayOfWeek": "Thursday",
+      "dateFull": "August 27, 2026",
+      "muhurtham": "11:00 AM",
+      "muhurthamLabel": "Muhurtham",
+      "calendarLink": "#",
+      "timeStart": "11:00 AM",
+      "timeNotes": "Reception to follow"
+    },
+    "venue": {
+      "name": "Bhavana Auditorium",
+      "address": "Chempoor Venjarammoodu, Kerala",
+      "mapUrl": "https://maps.app.goo.gl/CwHctxL7nTDSfiVcA"
+    }
+  },
+  "countdownTarget": "2026-08-27T11:00:00",
+  "allowGuestUploads": true,
+  "images": [],
+  "rsvp": {
+    "deadline": "August 15, 2026"
+  },
+  "music": {
+    "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+  }
+}

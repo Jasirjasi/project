@@ -32,13 +32,21 @@ const Gallery = ({ isAdmin = false }) => {
             try {
                 let data = null;
                 let error = null;
-                const activeClientId = (!clientSlug || clientSlug === 'main') ? 'adithi-rajkiran' : clientSlug;
+                const activeClientId = clientSlug || 'main';
 
                 if (activeClientId === 'adithi-rajkiran') {
                     const res = await supabase
                         .from('images')
                         .select('*')
                         .or('client_id.eq.adithi-rajkiran,client_id.eq.main,client_id.is.null')
+                        .order('created_at', { ascending: false });
+                    data = res.data;
+                    error = res.error;
+                } else if (activeClientId === 'ameen' || activeClientId === 'ameen-raihana') {
+                    const res = await supabase
+                        .from('images')
+                        .select('*')
+                        .or('client_id.eq.ameen,client_id.eq.ameen-raihana')
                         .order('created_at', { ascending: false });
                     data = res.data;
                     error = res.error;
@@ -68,6 +76,8 @@ const Gallery = ({ isAdmin = false }) => {
                 let filtered = data || [];
                 if (activeClientId === 'adithi-rajkiran') {
                     filtered = filtered.filter(img => !img.client_id || img.client_id === 'adithi-rajkiran' || img.client_id === 'main');
+                } else if (activeClientId === 'ameen' || activeClientId === 'ameen-raihana') {
+                    filtered = filtered.filter(img => img.client_id === 'ameen' || img.client_id === 'ameen-raihana');
                 } else {
                     filtered = filtered.filter(img => img.client_id === activeClientId);
                 }
@@ -103,7 +113,9 @@ const Gallery = ({ isAdmin = false }) => {
 
             let ctx = gsap.context(() => {
                 const items = gsap.utils.toArray('.gallery-item');
-                const degree = 18; 
+                // Dynamically scale rotational arc degree based on item count so items remain within viewport
+                const maxArc = Math.min(140, Math.max(40, (items.length - 1) * 12));
+                const degree = items.length <= 1 ? 0 : maxArc / (items.length - 1);
                 const radius = 800;
 
                 // Set initial container pivot
@@ -127,7 +139,7 @@ const Gallery = ({ isAdmin = false }) => {
                     type: "rotation",
                     onDragEnd: function() {
                         const rotation = gsap.getProperty(this.target, "rotation");
-                        const snapRotation = Math.round(rotation / degree) * degree;
+                        const snapRotation = Math.round(rotation / (degree || 1)) * (degree || 1);
                         gsap.to(this.target, { 
                             rotation: snapRotation, 
                             duration: 0.6,

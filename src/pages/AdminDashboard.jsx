@@ -72,7 +72,7 @@ const AdminDashboard = () => {
     const fetchClients = async () => {
         try {
             // Start with known local configs
-            const localSlugs = ['main', 'adithi-rajkiran'];
+            const localSlugs = ['main', 'adithi-rajkiran', 'ameen'];
             let databaseSlugs = [];
 
             try {
@@ -288,7 +288,7 @@ const AdminDashboard = () => {
         return { hex: '#831843', opacity: 0.5 };
     };
 
-    const persistConfig = async (configToSave) => {
+    const persistConfig = async (configToSave, overrideSlug = null) => {
         try {
             const sanitize = (obj) => {
                 if (obj === undefined) return null;
@@ -304,7 +304,7 @@ const AdminDashboard = () => {
             };
 
             const cleanConfig = sanitize(configToSave);
-            const targetSlug = clientSlug || 'main';
+            const targetSlug = overrideSlug || clientSlug || 'main';
 
             const { error: saveError } = await supabase
                 .from('settings')
@@ -312,7 +312,9 @@ const AdminDashboard = () => {
 
             if (saveError) throw saveError;
 
-            setConfig(cleanConfig);
+            if (targetSlug === clientSlug) {
+                setConfig(cleanConfig);
+            }
             setClientDetails(prev => ({ ...prev, [targetSlug]: cleanConfig }));
             await fetchClients();
             return true;
@@ -324,6 +326,79 @@ const AdminDashboard = () => {
                 text: `Error: ${err.message}`,
             });
             return false;
+        }
+    };
+
+    const handleExportConfig = (slugToExport) => {
+        const targetSlug = slugToExport || clientSlug || 'main';
+        const configData = (targetSlug === clientSlug && editConfig) 
+            ? editConfig 
+            : (clientDetails[targetSlug] || config || {});
+
+        const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
+            JSON.stringify(configData, null, 2)
+        )}`;
+
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute('href', jsonString);
+        downloadAnchor.setAttribute('download', `${targetSlug}_config.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Configuration Exported',
+            text: `Downloaded site configuration JSON file for [${targetSlug}]!`,
+            timer: 2000,
+            showConfirmButton: false
+        });
+    };
+
+    const handleImportConfig = async (targetSlugToImport) => {
+        const activeTargetSlug = targetSlugToImport || clientSlug || 'main';
+
+        const { value: file } = await Swal.fire({
+            title: `Import Site Configuration JSON`,
+            html: `Select a <code>.json</code> configuration file to load into client <strong>[${activeTargetSlug}]</strong>.`,
+            input: 'file',
+            inputAttributes: {
+                'accept': '.json,application/json',
+                'aria-label': 'Upload site configuration JSON file'
+            },
+            showCancelButton: true,
+            confirmButtonColor: '#3c8dbc',
+            confirmButtonText: 'Import & Apply Config'
+        });
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const parsedConfig = JSON.parse(e.target.result);
+                    if (!parsedConfig || typeof parsedConfig !== 'object' || Array.isArray(parsedConfig)) {
+                        throw new Error('Invalid JSON structure! The file must be a JSON object.');
+                    }
+
+                    if (activeTargetSlug === clientSlug) {
+                        setEditConfig(parsedConfig);
+                    }
+
+                    const success = await persistConfig(parsedConfig, activeTargetSlug);
+                    if (success) {
+                        await fetchClients();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Configuration Imported!',
+                            text: `Successfully loaded and saved JSON configuration for client [${activeTargetSlug}].`
+                        });
+                    }
+                } catch (err) {
+                    console.error('Import Config Error:', err);
+                    Swal.fire('Import Error', `Failed to parse JSON file: ${err.message}`, 'error');
+                }
+            };
+            reader.readAsText(file);
         }
     };
 
@@ -403,6 +478,106 @@ const AdminDashboard = () => {
                 console.error('Delete client error:', err);
                 Swal.fire('Error', 'Failed to delete client.', 'error');
             }
+        }
+    };
+
+    const handleRenameClient = async (oldSlug) => {
+        const targetSlug = oldSlug || clientSlug;
+        if (!targetSlug || targetSlug === 'main') {
+            Swal.fire('Action Not Allowed', 'The default [main] client template cannot be renamed.', 'warning');
+            return;
+        }
+
+        const { value: newSlug } = await Swal.fire({
+            title: `Rename Client [${targetSlug}]`,
+            text: 'Changing the client identifier will update the site URL, database settings, uploaded photos, and guest RSVPs.',
+            input: 'text',
+            inputValue: targetSlug,
+            inputLabel: 'New Client Unique Identifier / URL Slug',
+            inputPlaceholder: 'e.g. ameen-wedding',
+            showCancelButton: true,
+            confirmButtonColor: '#3c8dbc',
+            confirmButtonText: 'Rename & Migrate Data',
+            inputValidator: (value) => {
+                if (!value || !value.trim()) return 'Please enter a valid client slug!';
+                const formatted = value.trim().toLowerCase();
+                if (formatted === targetSlug) {
+                    return 'New slug must be different from current slug!';
+                }
+                if (formatted === 'main') {
+                    return 'The slug "main" is reserved!';
+                }
+                if (!/^[a-z0-9_-]+$/.test(formatted)) {
+                    return 'Only lowercase letters, numbers, hyphens (-) and underscores (_) are allowed.';
+                }
+            }
+        });
+
+        if (!newSlug) return;
+        const cleanNewSlug = newSlug.trim().toLowerCase();
+
+        try {
+            Swal.fire({
+                title: 'Renaming Client...',
+                text: 'Updating site settings, photos, and guest RSVPs in database...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            // 1. Fetch current settings for targetSlug
+            let currentConfig = clientDetails[targetSlug] || editConfig || {};
+            const { data: existingDbSetting } = await supabase.from('settings').select('config').eq('id', targetSlug).maybeSingle();
+            if (existingDbSetting && existingDbSetting.config) {
+                currentConfig = existingDbSetting.config;
+            }
+
+            // 2. Insert/Upsert new setting with cleanNewSlug
+            const { error: insertErr } = await supabase
+                .from('settings')
+                .upsert({ id: cleanNewSlug, config: currentConfig });
+
+            if (insertErr) throw insertErr;
+
+            // 3. Delete old setting record
+            await supabase.from('settings').delete().eq('id', targetSlug);
+
+            // 4. Update 'images' table client_id
+            try {
+                await supabase
+                    .from('images')
+                    .update({ client_id: cleanNewSlug })
+                    .eq('client_id', targetSlug);
+            } catch (imgErr) {
+                console.warn('Could not migrate images client_id column:', imgErr);
+            }
+
+            // 5. Update 'reservations' table client_id
+            try {
+                await supabase
+                    .from('reservations')
+                    .update({ client_id: cleanNewSlug })
+                    .eq('client_id', targetSlug);
+            } catch (rsvpErr) {
+                console.warn('Could not migrate reservations client_id column:', rsvpErr);
+            }
+
+            // 6. Refresh client list and set active client
+            await fetchClients();
+
+            if (clientSlug === targetSlug) {
+                setClientSlug(cleanNewSlug);
+                setEditConfig(currentConfig);
+                navigate(`/admin/config/${cleanNewSlug}`);
+            }
+
+            Swal.fire(
+                'Client Renamed!',
+                `Client [${targetSlug}] has been successfully renamed to [${cleanNewSlug}]. All associated photos, RSVPs, and configurations have been transferred.`,
+                'success'
+            );
+        } catch (err) {
+            console.error('Rename Client Error:', err);
+            Swal.fire('Rename Failed', err.message || 'An error occurred while renaming the client.', 'error');
         }
     };
 
@@ -519,11 +694,12 @@ const AdminDashboard = () => {
             return;
         }
         const exportData = rsvps.map(rsvp => ({
+            'Client Site': rsvp.client_id || clientSlug || 'main',
             'Name': rsvp.name,
             'Status': rsvp.guests === '0' ? 'Declined' : 'Attending',
             'Number of Guests': rsvp.guests,
             'Message': rsvp.message || '',
-            'Date Submitted': new Date(rsvp.created_at).toLocaleString()
+            'Date Submitted': rsvp.created_at ? new Date(rsvp.created_at).toLocaleString() : ''
         }));
         const ws = utils.json_to_sheet(exportData);
         const wb = utils.book_new();
@@ -609,15 +785,43 @@ const AdminDashboard = () => {
                     </button>
 
                     {viewMode === 'config' && (
-                        <a
-                            href={clientSlug === 'main' ? '/?client=main' : `/${clientSlug}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="btn-card-action btn-card-view"
-                            style={{ padding: '0.45rem 0.85rem', textDecoration: 'none' }}
-                        >
-                            🔗 View Site
-                        </a>
+                        <>
+                            <button
+                                onClick={() => handleExportConfig(clientSlug)}
+                                className="btn-card-action"
+                                style={{ padding: '0.45rem 0.85rem', backgroundColor: '#28a745', color: '#fff' }}
+                                title="Download / Export Site Configuration JSON"
+                            >
+                                📥 Export JSON
+                            </button>
+                            <button
+                                onClick={() => handleImportConfig(clientSlug)}
+                                className="btn-card-action"
+                                style={{ padding: '0.45rem 0.85rem', backgroundColor: '#6f42c1', color: '#fff' }}
+                                title="Upload / Import Site Configuration JSON"
+                            >
+                                📤 Import JSON
+                            </button>
+                            {clientSlug !== 'main' && (
+                                <button
+                                    onClick={() => handleRenameClient(clientSlug)}
+                                    className="btn-card-action"
+                                    style={{ padding: '0.45rem 0.85rem', backgroundColor: '#17a2b8', color: '#fff' }}
+                                    title="Rename Client Slug & Transfer All Data"
+                                >
+                                    ✏️ Rename Client
+                                </button>
+                            )}
+                            <a
+                                href={clientSlug === 'main' ? '/?client=main' : `/${clientSlug}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="btn-card-action btn-card-view"
+                                style={{ padding: '0.45rem 0.85rem', textDecoration: 'none' }}
+                            >
+                                🔗 View Site
+                            </a>
+                        </>
                     )}
 
                     <button
@@ -859,14 +1063,42 @@ const AdminDashboard = () => {
                                                     🔗 View Site
                                                 </a>
 
+                                                <button
+                                                    className="btn-card-action"
+                                                    style={{ backgroundColor: '#28a745', color: '#fff' }}
+                                                    onClick={() => handleExportConfig(slug)}
+                                                    title="Export Site Configuration JSON"
+                                                >
+                                                    📥
+                                                </button>
+
+                                                <button
+                                                    className="btn-card-action"
+                                                    style={{ backgroundColor: '#6f42c1', color: '#fff' }}
+                                                    onClick={() => handleImportConfig(slug)}
+                                                    title="Import Site Configuration JSON"
+                                                >
+                                                    📤
+                                                </button>
+
                                                 {slug !== 'main' && (
-                                                    <button
-                                                        className="btn-card-action btn-card-delete"
-                                                        onClick={() => handleDeleteClient(slug)}
-                                                        title="Delete Client Site"
-                                                    >
-                                                        🗑️
-                                                    </button>
+                                                    <>
+                                                        <button
+                                                            className="btn-card-action"
+                                                            style={{ backgroundColor: '#17a2b8', color: '#fff' }}
+                                                            onClick={() => handleRenameClient(slug)}
+                                                            title="Rename Client Identifier & URL Slug"
+                                                        >
+                                                            ✏️
+                                                        </button>
+                                                        <button
+                                                            className="btn-card-action btn-card-delete"
+                                                            onClick={() => handleDeleteClient(slug)}
+                                                            title="Delete Client Site"
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                    </>
                                                 )}
                                             </div>
                                         </div>
@@ -915,6 +1147,22 @@ const AdminDashboard = () => {
                                                         <span>⚙️</span> Wedding Site Configuration
                                                     </h3>
                                                     <div className="card-tools-adminlte">
+                                                        <button
+                                                            className="btn-card-action"
+                                                            style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', backgroundColor: '#28a745', color: '#fff', marginRight: '0.4rem' }}
+                                                            onClick={() => handleExportConfig(clientSlug)}
+                                                            title="Download site configuration JSON file"
+                                                        >
+                                                            📥 Export JSON
+                                                        </button>
+                                                        <button
+                                                            className="btn-card-action"
+                                                            style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', backgroundColor: '#6f42c1', color: '#fff', marginRight: '0.4rem' }}
+                                                            onClick={() => handleImportConfig(clientSlug)}
+                                                            title="Upload site configuration JSON file"
+                                                        >
+                                                            📤 Import JSON
+                                                        </button>
                                                         <button
                                                             className="btn-card-action btn-card-config"
                                                             style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}
@@ -1083,6 +1331,22 @@ const AdminDashboard = () => {
                                                             <input value={editConfig.details?.ceremony?.dateFull || ''} onChange={(e) => handleNestedConfigChange(e, 'details', 'ceremony', 'dateFull')} />
                                                         </div>
                                                         <div className="form-group">
+                                                            <label>Muhurtham / Ceremony Time</label>
+                                                            <input value={editConfig.details?.ceremony?.muhurtham || ''} placeholder="e.g. 11:00 AM" onChange={(e) => handleNestedConfigChange(e, 'details', 'ceremony', 'muhurtham')} />
+                                                        </div>
+                                                        <div className="form-group">
+                                                            <label>Ceremony Label</label>
+                                                            <input value={editConfig.details?.ceremony?.muhurthamLabel || ''} placeholder="e.g. Muhurtham, Nikkah, Ceremony Time" onChange={(e) => handleNestedConfigChange(e, 'details', 'ceremony', 'muhurthamLabel')} />
+                                                        </div>
+                                                        <div className="form-group">
+                                                            <label>Ceremony Start Time</label>
+                                                            <input value={editConfig.details?.ceremony?.timeStart || ''} placeholder="e.g. 11:00 AM" onChange={(e) => handleNestedConfigChange(e, 'details', 'ceremony', 'timeStart')} />
+                                                        </div>
+                                                        <div className="form-group">
+                                                            <label>Time Notes</label>
+                                                            <input value={editConfig.details?.ceremony?.timeNotes || ''} placeholder="e.g. Reception to follow" onChange={(e) => handleNestedConfigChange(e, 'details', 'ceremony', 'timeNotes')} />
+                                                        </div>
+                                                        <div className="form-group">
                                                             <label>Venue Name</label>
                                                             <input value={editConfig.details?.venue?.name || ''} onChange={(e) => handleNestedConfigChange(e, 'details', 'venue', 'name')} />
                                                         </div>
@@ -1119,7 +1383,7 @@ const AdminDashboard = () => {
                                                         <h3>Real-Time Live Invitation Preview</h3>
                                                         <div className="preview-container-wrapper">
                                                             <div className="preview-scaling-container">
-                                                                <ConfigContext.Provider value={{ config: editConfig, setConfig }}>
+                                                                <ConfigContext.Provider value={{ config: editConfig, setConfig, clientSlug, setClientSlug }}>
                                                                     <MainSite isPreview={true} />
                                                                 </ConfigContext.Provider>
                                                             </div>
@@ -1146,6 +1410,7 @@ const AdminDashboard = () => {
                                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                                 <thead>
                                                     <tr style={{ background: '#f8f9fa', borderBottom: '2px solid #dee2e6', textAlign: 'left' }}>
+                                                        <th style={{ padding: '0.8rem' }}>Client Site</th>
                                                         <th style={{ padding: '0.8rem' }}>Guest Name</th>
                                                         <th style={{ padding: '0.8rem' }}>Attending Status</th>
                                                         <th style={{ padding: '0.8rem' }}>Message</th>
@@ -1154,6 +1419,17 @@ const AdminDashboard = () => {
                                                 <tbody>
                                                     {rsvps.map(rsvp => (
                                                         <tr key={rsvp.id} style={{ borderBottom: '1px solid #e9ecef' }}>
+                                                            <td style={{ padding: '0.8rem' }}>
+                                                                <span style={{
+                                                                    background: '#e9ecef',
+                                                                    padding: '0.25rem 0.6rem',
+                                                                    borderRadius: '4px',
+                                                                    fontSize: '0.8rem',
+                                                                    fontWeight: '600'
+                                                                }}>
+                                                                    {rsvp.client_id || clientSlug || 'main'}
+                                                                </span>
+                                                            </td>
                                                             <td style={{ padding: '0.8rem', fontWeight: '600' }}>{rsvp.name}</td>
                                                             <td style={{ padding: '0.8rem' }}>
                                                                 <span style={{
@@ -1172,7 +1448,7 @@ const AdminDashboard = () => {
                                                     ))}
                                                     {rsvps.length === 0 && (
                                                         <tr>
-                                                            <td colSpan="3" style={{ padding: '2rem', textAlign: 'center', color: '#999' }}>
+                                                            <td colSpan="4" style={{ padding: '2rem', textAlign: 'center', color: '#999' }}>
                                                                 No RSVPs submitted yet for this client.
                                                             </td>
                                                         </tr>

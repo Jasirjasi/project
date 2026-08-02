@@ -26,9 +26,17 @@ const RSVP = () => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const { error: insertError } = await supabase
+            const activeClientId = clientSlug || 'main';
+            let { error: insertError } = await supabase
                 .from('reservations')
-                .insert([{ ...formData, client_id: clientSlug || 'main' }]);
+                .insert([{ ...formData, client_id: activeClientId }]);
+
+            if (insertError && (insertError.code === 'PGRST204' || insertError.code === '42703' || insertError.message?.includes('client_id') || insertError.message?.includes('does not exist'))) {
+                const fallbackRes = await supabase
+                    .from('reservations')
+                    .insert([formData]);
+                insertError = fallbackRes.error;
+            }
 
             if (insertError) throw insertError;
             setIsSubmitted(true);

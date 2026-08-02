@@ -81,7 +81,8 @@ const UploadModal = ({ isOpen, onClose, onUploadSuccess }) => {
                             filesToUpload.map(file => compressImage(file))
                         );
 
-                        const activeClientId = (!clientSlug || clientSlug === 'main') ? 'adithi-rajkiran' : clientSlug;
+                        const activeClientId = clientSlug || 'main';
+                        const uploadedRecords = [];
 
                         // Step 2: Insert into Supabase 'images' table item by item (avoids giant single SQL transaction timeout)
                         for (const url of compressedUrls) {
@@ -106,6 +107,11 @@ const UploadModal = ({ isOpen, onClose, onUploadSuccess }) => {
                                 uploadedRecords.push({
                                     url: data[0].url,
                                     id: data[0].id
+                                });
+                            } else {
+                                uploadedRecords.push({
+                                    url,
+                                    id: null
                                 });
                             }
                         }
