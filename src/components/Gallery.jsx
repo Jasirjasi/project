@@ -211,7 +211,10 @@ const Gallery = ({ isAdmin = false }) => {
     };
 
     const handleDelete = async (e, imageObj, index) => {
-        e.stopPropagation();
+        if (e) {
+            e.stopPropagation();
+            if (e.preventDefault) e.preventDefault();
+        }
 
         const result = await Swal.fire({
             title: 'Are you sure?',
@@ -230,12 +233,19 @@ const Gallery = ({ isAdmin = false }) => {
                         .from('images')
                         .delete()
                         .eq('id', imageObj.id);
-                    if (deleteError) throw deleteError;
+
+                    if (deleteError) {
+                        if (deleteError.code === '42501' || deleteError.message?.includes('row-level security') || deleteError.message?.includes('violates row-level security policy')) {
+                            Swal.fire('Delete Blocked by RLS', 'Supabase Row-Level Security policy blocks deletion. Please enable DELETE permission for table "images" in your Supabase SQL Editor.', 'error');
+                            return;
+                        }
+                        throw deleteError;
+                    }
                     setImages(prev => prev.filter((_, i) => i !== index));
                     Swal.fire('Deleted!', 'Your photo has been deleted.', 'success');
                 } catch (err) {
                     console.error('Delete error:', err);
-                    Swal.fire('Error!', 'Something went wrong while deleting.', 'error');
+                    Swal.fire('Error!', err.message || 'Something went wrong while deleting.', 'error');
                 }
             } else {
                 setImages(prev => prev.filter((_, i) => i !== index));
@@ -294,7 +304,8 @@ const Gallery = ({ isAdmin = false }) => {
                                        { (config.allowGuestUploads || isAdmin) && <button
                                             className="delete-image-btn"
                                             onClick={(e) => handleDelete(e, imgObj, index)}
-                                            onTouchEnd={(e) => e.stopPropagation()} // Prevent modal from opening when deleting
+                                            onTouchStart={(e) => e.stopPropagation()}
+                                            onTouchEnd={(e) => { e.stopPropagation(); }}
                                             title="Delete Photo"
                                         >
                                             <DeleteIcon fontSize="small" />
@@ -329,7 +340,8 @@ const Gallery = ({ isAdmin = false }) => {
                                     { (config.allowGuestUploads || isAdmin) && <button
                                         className="delete-image-btn"
                                         onClick={(e) => handleDelete(e, imgObj, index)}
-                                        onTouchEnd={(e) => e.stopPropagation()}
+                                        onTouchStart={(e) => e.stopPropagation()}
+                                        onTouchEnd={(e) => { e.stopPropagation(); }}
                                         title="Delete Photo"
                                     >
                                         <DeleteIcon fontSize="small" />

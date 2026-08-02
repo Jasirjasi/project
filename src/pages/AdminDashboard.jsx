@@ -93,10 +93,12 @@ const AdminDashboard = () => {
             }
 
             const combinedList = Array.from(new Set([...localSlugs, ...databaseSlugs]));
-            setClientList(combinedList);
+            const deletedSlugs = JSON.parse(localStorage.getItem('deleted_clients') || '[]');
+            const activeList = combinedList.filter(slug => !deletedSlugs.includes(slug));
+            setClientList(activeList);
 
             // Fetch configs for local items not yet loaded
-            for (const slug of combinedList) {
+            for (const slug of activeList) {
                 if (!clientDetails[slug]) {
                     try {
                         const res = await fetch(`/configs/${slug}.json`);
@@ -422,6 +424,14 @@ const AdminDashboard = () => {
 
         if (newSlug) {
             const cleanSlug = newSlug.trim().toLowerCase();
+
+            // Un-mark slug from deleted list if recreating
+            const deletedSlugs = JSON.parse(localStorage.getItem('deleted_clients') || '[]');
+            if (deletedSlugs.includes(cleanSlug)) {
+                const updatedDeleted = deletedSlugs.filter(s => s !== cleanSlug);
+                localStorage.setItem('deleted_clients', JSON.stringify(updatedDeleted));
+            }
+
             const initialClientConfig = {
                 ...config,
                 couple: {
@@ -457,26 +467,58 @@ const AdminDashboard = () => {
 
         const result = await Swal.fire({
             title: `Delete Client [${targetSlug}]?`,
-            text: 'This will permanently remove client settings and unassign related photos/RSVPs!',
+            text: `Are you sure you want to delete client [${targetSlug}]? This will permanently remove its configuration, gallery images, and guest RSVPs!`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
             confirmButtonText: 'Yes, Delete Client'
         });
 
         if (result.isConfirmed) {
             try {
+                Swal.fire({
+                    title: 'Deleting Client...',
+                    text: 'Removing client configuration and associated data...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                // Delete settings from Supabase
                 await supabase.from('settings').delete().eq('id', targetSlug);
+
+                // Delete associated photos & RSVPs from Supabase
+                try {
+                    await supabase.from('images').delete().eq('client_id', targetSlug);
+                } catch (imgErr) {
+                    console.warn('Could not delete images for client:', imgErr);
+                }
+
+                try {
+                    await supabase.from('reservations').delete().eq('client_id', targetSlug);
+                } catch (rsvpErr) {
+                    console.warn('Could not delete reservations for client:', rsvpErr);
+                }
+
+                // Add to deleted_clients list in localStorage so local JSON configs don't reappear
+                const deletedSlugs = JSON.parse(localStorage.getItem('deleted_clients') || '[]');
+                if (!deletedSlugs.includes(targetSlug)) {
+                    deletedSlugs.push(targetSlug);
+                    localStorage.setItem('deleted_clients', JSON.stringify(deletedSlugs));
+                }
+
                 await fetchClients();
+
                 if (clientSlug === targetSlug) {
                     setClientSlug('main');
                     setViewMode('overview');
                     navigate('/admin/dashboard');
                 }
-                Swal.fire('Deleted!', `Client [${targetSlug}] has been removed.`, 'success');
+
+                Swal.fire('Deleted!', `Client [${targetSlug}] has been permanently removed.`, 'success');
             } catch (err) {
                 console.error('Delete client error:', err);
-                Swal.fire('Error', 'Failed to delete client.', 'error');
+                Swal.fire('Error', 'Failed to delete client: ' + (err.message || 'Unknown error'), 'error');
             }
         }
     };
@@ -803,14 +845,24 @@ const AdminDashboard = () => {
                                 📤 Import JSON
                             </button>
                             {clientSlug !== 'main' && (
-                                <button
-                                    onClick={() => handleRenameClient(clientSlug)}
-                                    className="btn-card-action"
-                                    style={{ padding: '0.45rem 0.85rem', backgroundColor: '#17a2b8', color: '#fff' }}
-                                    title="Rename Client Slug & Transfer All Data"
-                                >
-                                    ✏️ Rename Client
-                                </button>
+                                <>
+                                    <button
+                                        onClick={() => handleRenameClient(clientSlug)}
+                                        className="btn-card-action"
+                                        style={{ padding: '0.45rem 0.85rem', backgroundColor: '#17a2b8', color: '#fff' }}
+                                        title="Rename Client Slug & Transfer All Data"
+                                    >
+                                        ✏️ Rename Client
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteClient(clientSlug)}
+                                        className="btn-card-action btn-card-delete"
+                                        style={{ padding: '0.45rem 0.85rem' }}
+                                        title="Permanently Delete Client Site & Associated Data"
+                                    >
+                                        🗑️ Delete Client
+                                    </button>
+                                </>
                             )}
                             <a
                                 href={clientSlug === 'main' ? '/?client=main' : `/${clientSlug}`}
@@ -1362,6 +1414,24 @@ const AdminDashboard = () => {
                                                         >
                                                             Save Site Configuration
                                                         </button>
+
+                                                        {clientSlug !== 'main' && (
+                                                            <div style={{ marginTop: '2.5rem', padding: '1.25rem', border: '1px solid #dc3545', borderRadius: '8px', backgroundColor: '#fff5f5' }}>
+                                                                <h4 style={{ margin: '0 0 0.5rem 0', color: '#dc3545', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                                    ⚠️ Danger Zone
+                                                                </h4>
+                                                                <p style={{ margin: '0 0 1rem 0', fontSize: '0.88rem', color: '#6c757d' }}>
+                                                                    Deleting client site <strong>[{clientSlug}]</strong> will permanently remove its configuration, gallery images, and guest RSVPs.
+                                                                </p>
+                                                                <button
+                                                                    className="btn-card-action btn-card-delete"
+                                                                    style={{ padding: '0.65rem 1.25rem', fontSize: '0.9rem', width: 'auto' }}
+                                                                    onClick={() => handleDeleteClient(clientSlug)}
+                                                                >
+                                                                    🗑️ Delete Client Site [{clientSlug}]
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>

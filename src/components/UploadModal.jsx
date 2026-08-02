@@ -119,7 +119,13 @@ const UploadModal = ({ isOpen, onClose, onUploadSuccess }) => {
                         return uploadedRecords;
                     } catch (err) {
                         console.error('Upload Error:', err);
-                        Swal.showValidationMessage(err.message || 'Failed to upload photos. Please try again.');
+                        let errorMessage = err.message || 'Failed to upload photos. Please try again.';
+                        
+                        if (err.code === '42501' || err.message?.includes('row-level security') || err.message?.includes('violates row-level security policy')) {
+                            errorMessage = 'Upload blocked by Supabase Row-Level Security (RLS). Please enable INSERT permission for the "images" table in your Supabase SQL Editor.';
+                        }
+                        
+                        Swal.showValidationMessage(errorMessage);
                     }
                 },
                 allowOutsideClick: () => !Swal.isLoading()
