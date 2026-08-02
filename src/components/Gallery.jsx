@@ -212,9 +212,14 @@ const Gallery = ({ isAdmin = false }) => {
 
     const handleDelete = async (e, imageObj, index) => {
         if (e) {
-            e.stopPropagation();
+            if (e.stopPropagation) e.stopPropagation();
             if (e.preventDefault) e.preventDefault();
         }
+
+        // Debounce touch/click double firing
+        if (imageObj._deleting) return;
+        imageObj._deleting = true;
+        setTimeout(() => { delete imageObj._deleting; }, 1000);
 
         const result = await Swal.fire({
             title: 'Are you sure?',
@@ -304,11 +309,13 @@ const Gallery = ({ isAdmin = false }) => {
                                        { (config.allowGuestUploads || isAdmin) && <button
                                             className="delete-image-btn"
                                             onClick={(e) => handleDelete(e, imgObj, index)}
-                                            onTouchStart={(e) => e.stopPropagation()}
-                                            onTouchEnd={(e) => { e.stopPropagation(); }}
+                                            onTouchStart={(e) => {
+                                                if (e.stopPropagation) e.stopPropagation();
+                                            }}
+                                            onTouchEnd={(e) => handleDelete(e, imgObj, index)}
                                             title="Delete Photo"
                                         >
-                                            <DeleteIcon fontSize="small" />
+                                            <DeleteIcon fontSize="small" style={{ pointerEvents: 'none' }} />
                                         </button> }
                                         <img src={imgObj.src} alt="Couple photo" loading="lazy" />
                                         <div className="gallery-overlay">
@@ -340,11 +347,13 @@ const Gallery = ({ isAdmin = false }) => {
                                     { (config.allowGuestUploads || isAdmin) && <button
                                         className="delete-image-btn"
                                         onClick={(e) => handleDelete(e, imgObj, index)}
-                                        onTouchStart={(e) => e.stopPropagation()}
-                                        onTouchEnd={(e) => { e.stopPropagation(); }}
+                                        onTouchStart={(e) => {
+                                            if (e.stopPropagation) e.stopPropagation();
+                                        }}
+                                        onTouchEnd={(e) => handleDelete(e, imgObj, index)}
                                         title="Delete Photo"
                                     >
-                                        <DeleteIcon fontSize="small" />
+                                        <DeleteIcon fontSize="small" style={{ pointerEvents: 'none' }} />
                                     </button>}
                                     <img src={imgObj.src} alt="Couple photo" loading="lazy" />
                                     <div className="gallery-overlay">
