@@ -87,7 +87,10 @@ const Gallery = ({ isAdmin = false }) => {
                     src: img.url
                 }));
 
-                const configImgs = (config?.images || []).map(src => ({ id: null, src }));
+                const loadedImageUrls = new Set(loadedImages.map(img => img.src));
+                const configImgs = (config?.images || [])
+                    .filter(src => src && !loadedImageUrls.has(src))
+                    .map(src => ({ id: null, src }));
                 setImages([...configImgs, ...loadedImages]);
             } catch (err) {
                 console.error("Error fetching images from supabase", err);
@@ -232,8 +235,11 @@ const Gallery = ({ isAdmin = false }) => {
         });
 
         if (result.isConfirmed) {
-            if (imageObj.id) {
-                try {
+            try {
+                const activeClientId = clientSlug || 'main';
+
+                // 1. Delete by ID from Supabase 'images' table if ID exists
+                if (imageObj.id) {
                     const { error: deleteError } = await supabase
                         .from('images')
                         .delete()
@@ -246,15 +252,43 @@ const Gallery = ({ isAdmin = false }) => {
                         }
                         throw deleteError;
                     }
-                    setImages(prev => prev.filter((_, i) => i !== index));
-                    Swal.fire('Deleted!', 'Your photo has been deleted.', 'success');
-                } catch (err) {
-                    console.error('Delete error:', err);
-                    Swal.fire('Error!', err.message || 'Something went wrong while deleting.', 'error');
                 }
-            } else {
+
+                // 2. Also attempt deletion by URL in Supabase 'images' table (in case sample image or duplicate was stored by URL)
+                if (imageObj.src) {
+                    try {
+                        await supabase
+                            .from('images')
+                            .delete()
+                            .eq('url', imageObj.src);
+                    } catch (urlDeleteErr) {
+                        console.warn('Could not delete by URL from images table:', urlDeleteErr);
+                    }
+                }
+
+                // 3. Remove image from config.images if present and persist updated config to Supabase 'settings' table
+                if (config && Array.isArray(config.images) && config.images.includes(imageObj.src)) {
+                    const updatedConfigImages = config.images.filter(src => src !== imageObj.src);
+                    const updatedConfig = {
+                        ...config,
+                        images: updatedConfigImages
+                    };
+                    if (setConfig) setConfig(updatedConfig);
+
+                    try {
+                        await supabase
+                            .from('settings')
+                            .upsert({ id: activeClientId, config: updatedConfig });
+                    } catch (settingErr) {
+                        console.warn('Could not update settings config in Supabase:', settingErr);
+                    }
+                }
+
                 setImages(prev => prev.filter((_, i) => i !== index));
-                Swal.fire('Removed!', 'Photo has been removed from view.', 'success');
+                Swal.fire('Deleted!', 'Your photo has been deleted.', 'success');
+            } catch (err) {
+                console.error('Delete error:', err);
+                Swal.fire('Error!', err.message || 'Something went wrong while deleting.', 'error');
             }
         }
     };
